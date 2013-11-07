@@ -13,8 +13,8 @@ import java.util.Set;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -152,9 +152,13 @@ public class ImportWiki {
     // StringField doesn't tokenize
     document.add(
         new StringField(FieldNames.TITLE.toString(), title, Field.Store.YES));
-    // TextField tokenizes
-    document.add(
-        new TextField(FieldNames.TEXT.toString(), plainText, Field.Store.NO));
+    // Field which tokenizes and has the inverted indexes.
+    FieldType indexedType = new FieldType();
+    indexedType.setStored(false);
+    indexedType.setTokenized(true);
+    indexedType.setIndexed(true);
+    indexedType.setStoreTermVectors(true);
+    document.add(new Field(FieldNames.TEXT.toString(), plainText,indexedType));
 
     writer.addDocument(document);
   }

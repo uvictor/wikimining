@@ -10,6 +10,7 @@ import org.apache.lucene.index.IndexReader;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class ObjectiveFunctionTest {
     function = null;
   }
 
-  //@Test
+  @Test
   public void testComputeWordCoverageSingleDocOne() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(0);
@@ -51,7 +52,7 @@ public class ObjectiveFunctionTest {
     Assert.assertTrue(result > 0);
   }
 
-  //@Test
+  @Test
   public void testComputeWordCoverageSingleDocTwo() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
@@ -74,7 +75,7 @@ public class ObjectiveFunctionTest {
     Assert.assertTrue(resultTwo > 0);
   }
 
-  //@Test
+  @Test
   public void testComputeWordCoverageMultipleDocs() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
@@ -83,5 +84,18 @@ public class ObjectiveFunctionTest {
 
     final double result = function.computeWordCoverage(docsIds);
     Assert.assertTrue(result > 0);
+  }
+
+    @Test
+  public void testComputeWordCoverageVersusSlow() throws Exception {
+    final Set<Integer> docsIds = new HashSet<>();
+    docsIds.add(1);
+    docsIds.add(4);
+    docsIds.add(10);
+
+    function.initializeSlowComputations();
+    final double result = function.computeWordCoverage(docsIds);
+    final double resultSlow = function.computeWordCoverageSlow(docsIds);
+    assertEquals(resultSlow, result, 1e-5);
   }
 }
