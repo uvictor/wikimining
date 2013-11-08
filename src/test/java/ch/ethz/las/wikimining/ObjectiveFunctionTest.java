@@ -1,5 +1,5 @@
 
-package wikimining;
+package ch.ethz.las.wikimining;
 
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 import java.io.IOException;

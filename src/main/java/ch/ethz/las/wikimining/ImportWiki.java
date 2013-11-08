@@ -1,5 +1,5 @@
 
-package wikimining;
+package ch.ethz.las.wikimining;
 
 import de.tudarmstadt.ukp.wikipedia.api.Category;
 import de.tudarmstadt.ukp.wikipedia.api.DatabaseConfiguration;
@@ -101,13 +101,30 @@ public class ImportWiki {
 
   private void indexWiki() throws IOException, WikiApiException {
     try (final IndexWriter writer = new IndexWriter(indexDir, indexConfig)) {
-      indexCategory(writer, wiki.getCategory("Ball games"));
-      indexCategory(writer, wiki.getCategory("NEC_PC-9801_games"));
+//      indexCategoryRecursive(writer, wiki.getCategory("Mechanics"));
+//      indexCategory(writer, wiki.getCategory("Windows games"));
+//      indexCategory(writer, wiki.getCategory("Ball games"));
+//      indexCategory(writer, wiki.getCategory("NEC_PC-9801_games"));
       indexCategory(writer, wiki.getCategory("Video game genres"));
     }
   }
 
-  private void indexCategory(IndexWriter writer, Category category)
+  private void indexCategoryRecursive(IndexWriter writer, Category category)
+      throws IOException, WikiApiException {
+    indexCategory(writer, category);
+
+    Iterable<Category> descendants = category.getDescendants();
+    int count = 0;
+    int pages = 0;
+    for (Category subcategory : descendants) {
+      pages += indexCategory(writer, subcategory);
+      count++;
+      System.out.println("Indexed " + count + " categories.");
+    }
+    System.out.println("Indexed " + pages + " pages.");
+  }
+
+  private int indexCategory(IndexWriter writer, Category category)
       throws IOException, WikiApiException {
     System.out.println("Category " + category.getTitle() + " with "
         + category.getNumberOfPages() + " pages.");
@@ -117,7 +134,8 @@ public class ImportWiki {
       indexPage(
           writer, article.getTitle().getPlainTitle(), article.getPlainText());
     }
-    System.out.println("It really has " + articles.size() + " pages.");
+
+    return articles.size();
   }
 
   private Category getMaxCategory(IndexWriter writer) throws WikiApiException {

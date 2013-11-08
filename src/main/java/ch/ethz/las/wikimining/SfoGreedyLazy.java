@@ -1,4 +1,4 @@
-package wikimining;
+package ch.ethz.las.wikimining;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -139,6 +139,7 @@ public class SfoGreedyLazy {
 
   /**
    * Runs the SFO greedy algorithm non-lazily.
+   * @deprecated use {@link run} instead
    *
    * See {@link run} for other details.
    */

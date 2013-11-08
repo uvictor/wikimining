@@ -1,4 +1,4 @@
-package wikimining;
+package ch.ethz.las.wikimining;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -55,8 +55,6 @@ public class ObjectiveFunction {
    *
    * @param theReader used to get the documents' scores
    * @param theFieldName name of the indexed field
-   *
-   * @throws java.io.IOException
    */
   public ObjectiveFunction(IndexReader theReader, String theFieldName) {
     reader = theReader;
@@ -65,6 +63,12 @@ public class ObjectiveFunction {
     similarity = new DefaultSimilarity();
   }
 
+  /**
+   * Call this before you use {@link computeWordCoverageSlow} method.
+   * @deprecated
+   *
+   * @throws IOException
+   */
   public void initializeSlowComputations() throws IOException {
     allTerms = SlowCompositeReaderWrapper.wrap(reader).terms(fieldName);
   }
@@ -119,6 +123,7 @@ public class ObjectiveFunction {
 
   /**
    * Computes the word coverage as equation (1) from the paper.
+   * @deprecated use {@link computeWordCoverage} instead
    *
    * Does this by iterating through all documents of a given term, for all
    * terms, which is slow.

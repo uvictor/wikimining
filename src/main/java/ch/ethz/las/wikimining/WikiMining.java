@@ -1,4 +1,4 @@
-package wikimining;
+package ch.ethz.las.wikimining;
 
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiInitializationException;
@@ -14,7 +14,10 @@ public class WikiMining {
       throws WikiInitializationException, WikiApiException, IOException {
     // Import Wikipedia
     ImportWiki wiki = new ImportWiki();
+    final long start = System.currentTimeMillis();
     wiki.initialise();
+    final long time = (System.currentTimeMillis() - start) / 1000;
+    System.out.println("Finished importing after " + time + " seconds.");
 
     // Initialize Lucene reading
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {

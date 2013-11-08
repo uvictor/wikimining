@@ -1,5 +1,5 @@
 
-package wikimining;
+package ch.ethz.las.wikimining;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
