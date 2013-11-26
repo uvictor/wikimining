@@ -15,7 +15,7 @@ public class WikiMining {
     // Import Wikipedia
     ImportWiki wiki = new ImportWiki();
     final long start = System.currentTimeMillis();
-    wiki.initialise();
+    wiki.initialiseForReading();
     final long time = (System.currentTimeMillis() - start) / 1000;
     System.out.println("Finished importing after " + time + " seconds.");
 
@@ -23,7 +23,7 @@ public class WikiMining {
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {
       final SfoGreedyLazy sfo =
           new SfoGreedyLazy(reader, ImportWiki.FieldNames.TEXT.toString());
-      final Set<Integer> selected = sfo.run(3);
+      final Set<Integer> selected = sfo.run(1);
 
       printSelected(reader, selected);
     }

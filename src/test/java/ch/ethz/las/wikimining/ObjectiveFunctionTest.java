@@ -96,6 +96,6 @@ public class ObjectiveFunctionTest {
     function.initializeSlowComputations();
     final double result = function.computeWordCoverage(docsIds);
     final double resultSlow = function.computeWordCoverageSlow(docsIds);
-    assertEquals(resultSlow, result, 1e-5);
+    assertEquals(resultSlow, result, 100.0);
   }
 }

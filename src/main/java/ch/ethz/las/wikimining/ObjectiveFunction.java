@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.apache.log4j.Logger;
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.SlowCompositeReaderWrapper;
@@ -42,7 +45,9 @@ public class ObjectiveFunction {
 
   private final IndexReader reader;
   private final String fieldName;
+  private final Logger logger;
   private final DefaultSimilarity similarity;
+  private final ExecutorService threadPool;
   private Terms allTerms = null;
 
   // Might be costly to initialize, so we keep a copy here. Used in
@@ -60,7 +65,9 @@ public class ObjectiveFunction {
     reader = theReader;
     fieldName = theFieldName;
 
+    logger = Logger.getLogger(this.getClass());
     similarity = new DefaultSimilarity();
+    threadPool = Executors.newFixedThreadPool(4);
   }
 
   /**
@@ -92,6 +99,13 @@ public class ObjectiveFunction {
     final Map<BytesRef, Score> maxScores = new HashMap<>();
     for (Integer docId : docIds) {
       final Terms terms = reader.getTermVector(docId, fieldName);
+      if (terms == null) {
+        final String title =
+            reader.document(docId).get(ImportWiki.FieldNames.TITLE.toString());
+        logger.warn("Document " + title + "(" + docId + ")" + " has an empty"
+            + " term vector");
+        continue;
+      }
 
       termsEnum = terms.iterator(termsEnum);
       while (termsEnum.next() != null) {

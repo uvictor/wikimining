@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
+import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
 
 /**
@@ -55,6 +56,7 @@ public class SfoGreedyLazy {
     }
   }
 
+  private final Logger logger;
   private final IndexReader reader;
   private final ObjectiveFunction function;
 
@@ -68,6 +70,7 @@ public class SfoGreedyLazy {
    */
   public SfoGreedyLazy(IndexReader theReader, String theFieldName)
       throws IOException {
+    logger = Logger.getLogger(this.getClass());
     reader = theReader;
     function = new ObjectiveFunction(theReader, theFieldName);
   }
@@ -95,12 +98,17 @@ public class SfoGreedyLazy {
     final PriorityQueue<ScoreDocId> bestDocs = new PriorityQueue<>();
     double currentScore;
 
+    logger.info("Scoring " + reader.numDocs() + " documents.");
     for (int docId = 0; docId < reader.numDocs(); ++docId) {
         selected.add(docId);
         final double score = function.computeWordCoverage(selected);
         selected.remove(docId);
 
         bestDocs.add(new ScoreDocId(score, docId));
+
+        if ((docId + 1) % 1000 == 0) {
+          logger.info("Indexed pages: " + docId);
+        }
     }
 
     final ScoreDocId firstDoc = bestDocs.poll();

@@ -26,8 +26,8 @@ public class ImportWikiTest {
   public void testInitialise() throws Exception {
     wiki.initialiseForTest();
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {
-      assertEquals(152, reader.numDocs());
-      assertEquals(152, reader.maxDoc());
+      assertEquals(72, reader.numDocs());
+      assertEquals(72, reader.maxDoc());
     }
   }
 }

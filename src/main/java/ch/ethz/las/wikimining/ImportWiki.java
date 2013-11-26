@@ -127,7 +127,15 @@ public class ImportWiki {
     initialized = false;
   }
 
-  public void initialise()
+  public void initialiseForReading()
+      throws WikiInitializationException, IOException, WikiApiException {
+    initialiseWikiDatabase();
+    initializeLuceneOnHdd(new File("allIndex"));
+
+    initialized = true;
+  }
+
+  public void initialiseAndIndex()
       throws WikiInitializationException, IOException, WikiApiException {
     initialiseWikiDatabase();
     initializeLuceneOnHdd(new File("testIndex"));
@@ -230,6 +238,9 @@ public class ImportWiki {
     return maxCategory;
   }
 
+  // TODO(uvictor): wait for completion of the future and be sure not to close
+  // the writer before all the threads have finished their job; maybe use
+  // writer.commit()?
   private int indexAllWiki(IndexWriter writer) {
     assert !(indexDir instanceof RAMDirectory);
 
@@ -237,6 +248,7 @@ public class ImportWiki {
     for (final Page article : wiki.getArticles()) {
       Future<Boolean> future =
           threadPool.submit(new IndexArticleCallable(writer, article));
+      // TODO(uvictor): see how we can still print the count
       /*if (indexArticle(writer, article)) {
         indexedCount++;
         if (indexedCount % 1000 == 0) {
