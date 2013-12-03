@@ -13,9 +13,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class SfoGreedyLazyTest {
+public class SfoGreedyLazyMessTest {
 private static ImportWiki wiki;
-  private SfoGreedyLazy sfo;
+  private SfoGreedyLazyMess sfo;
 
   @BeforeClass
   public static void setUpClass() throws IOException, WikiApiException {
@@ -31,7 +31,7 @@ private static ImportWiki wiki;
   @Before
   public void setUp() throws IOException {
     final IndexReader reader = DirectoryReader.open(wiki.getIndexDir());
-    sfo = new SfoGreedyLazy(reader, ImportWiki.FieldNames.TEXT.toString());
+    sfo = new SfoGreedyLazyMess(reader, ImportWiki.FieldNames.TEXT.toString());
   }
 
   @After

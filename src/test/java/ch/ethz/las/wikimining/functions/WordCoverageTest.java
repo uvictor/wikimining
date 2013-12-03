@@ -1,8 +1,12 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
-package ch.ethz.las.wikimining;
+package ch.ethz.las.wikimining.functions;
 
-import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
-import java.io.IOException;
+import ch.ethz.las.wikimining.ImportWiki;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.lucene.index.DirectoryReader;
@@ -15,13 +19,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ObjectiveFunctionTest {
-
+/**
+ *
+ * @author uvictor
+ */
+public class WordCoverageTest {
   private static ImportWiki wiki;
-  private ObjectiveFunction function;
+  private IndexReader reader;
+  private WordCoverage wordCoverage;
 
   @BeforeClass
-  public static void setUpClass() throws IOException, WikiApiException {
+  public static void setUpClass() throws Exception {
     wiki = new ImportWiki();
     wiki.initialiseForTest();
   }
@@ -32,15 +40,16 @@ public class ObjectiveFunctionTest {
   }
 
   @Before
-  public void setUp() throws IOException {
-    final IndexReader reader = DirectoryReader.open(wiki.getIndexDir());
-    function =
-        new ObjectiveFunction(reader, ImportWiki.FieldNames.TEXT.toString());
+  public void setUp() throws Exception {
+    reader = DirectoryReader.open(wiki.getIndexDir());
+    wordCoverage =
+        new WordCoverage(reader, ImportWiki.FieldNames.TEXT.toString());
   }
 
   @After
   public void tearDown() {
-    function = null;
+    wordCoverage = null;
+    reader = null;
   }
 
   @Test
@@ -48,7 +57,7 @@ public class ObjectiveFunctionTest {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(0);
 
-    final double result = function.computeWordCoverage(docsIds);
+    final double result = wordCoverage.compute(docsIds);
     Assert.assertTrue(result > 0);
   }
 
@@ -57,7 +66,7 @@ public class ObjectiveFunctionTest {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
 
-    final double result = function.computeWordCoverage(docsIds);
+    final double result = wordCoverage.compute(docsIds);
     Assert.assertTrue(result > 0);
   }
 
@@ -66,12 +75,12 @@ public class ObjectiveFunctionTest {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(0);
 
-    final double result = function.computeWordCoverage(docsIds);
+    final double result = wordCoverage.compute(docsIds);
     Assert.assertTrue(result > 0);
 
     docsIds.remove(0);
     docsIds.add(1);
-    final double resultTwo = function.computeWordCoverage(docsIds);
+    final double resultTwo = wordCoverage.compute(docsIds);
     Assert.assertTrue(resultTwo > 0);
   }
 
@@ -82,20 +91,21 @@ public class ObjectiveFunctionTest {
     docsIds.add(4);
     docsIds.add(10);
 
-    final double result = function.computeWordCoverage(docsIds);
+    final double result = wordCoverage.compute(docsIds);
     Assert.assertTrue(result > 0);
   }
 
-    @Test
+  @Test
   public void testComputeWordCoverageVersusSlow() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
     docsIds.add(4);
     docsIds.add(10);
 
-    function.initializeSlowComputations();
-    final double result = function.computeWordCoverage(docsIds);
-    final double resultSlow = function.computeWordCoverageSlow(docsIds);
+    final WordCoverageSlow wordCoverageSlow =
+        new WordCoverageSlow(reader, ImportWiki.FieldNames.TEXT.toString());
+    final double result = wordCoverage.compute(docsIds);
+    final double resultSlow = wordCoverageSlow.compute(docsIds);
     assertEquals(resultSlow, result, 100.0);
   }
 }

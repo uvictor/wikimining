@@ -5,6 +5,8 @@
 *.war
 *.ear
 
+*.txt
+*.in
 .*.swp
 
 target/

@@ -123,7 +123,7 @@ public class ImportWiki {
 
   public ImportWiki() {
     logger = Logger.getLogger(this.getClass());
-    threadPool = Executors.newFixedThreadPool(4);
+    threadPool = Executors.newFixedThreadPool(WikiMining.THREAD_COUNT);
     initialized = false;
   }
 
@@ -147,7 +147,7 @@ public class ImportWiki {
   /**
    * Visible for tests.
    */
-  void initialiseForTest()
+  public void initialiseForTest()
       throws WikiInitializationException, IOException, WikiApiException {
     initialiseWikiDatabase();
     initializeLuceneInRam();
