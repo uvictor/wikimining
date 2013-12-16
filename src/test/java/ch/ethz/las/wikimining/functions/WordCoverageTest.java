@@ -31,7 +31,7 @@ public class WordCoverageTest {
   @BeforeClass
   public static void setUpClass() throws Exception {
     wiki = new ImportWiki();
-    wiki.initialiseForTest();
+    wiki.initialiseAndIndexForTest();
   }
 
   @AfterClass
@@ -52,7 +52,7 @@ public class WordCoverageTest {
     reader = null;
   }
 
-  @Test
+  //@Test
   public void testComputeWordCoverageSingleDocOne() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(0);
@@ -61,7 +61,7 @@ public class WordCoverageTest {
     Assert.assertTrue(result > 0);
   }
 
-  @Test
+  //@Test
   public void testComputeWordCoverageSingleDocTwo() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
@@ -70,7 +70,7 @@ public class WordCoverageTest {
     Assert.assertTrue(result > 0);
   }
 
-  @Test
+  //@Test
   public void testComputeWordCoverageConsecutiveSingleDocs() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(0);
@@ -84,7 +84,7 @@ public class WordCoverageTest {
     Assert.assertTrue(resultTwo > 0);
   }
 
-  @Test
+  //@Test
   public void testComputeWordCoverageMultipleDocs() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
@@ -95,8 +95,20 @@ public class WordCoverageTest {
     Assert.assertTrue(result > 0);
   }
 
+  //@Test
+  public void testComputeWordCoverageVersusSlowSingleDoc() throws Exception {
+    final Set<Integer> docsIds = new HashSet<>();
+    docsIds.add(1);
+
+    final WordCoverageSlow wordCoverageSlow =
+        new WordCoverageSlow(reader, ImportWiki.FieldNames.TEXT.toString());
+    final double result = wordCoverage.compute(docsIds);
+    final double resultSlow = wordCoverageSlow.compute(docsIds);
+    assertEquals(resultSlow, result, 0.001);
+  }
+
   @Test
-  public void testComputeWordCoverageVersusSlow() throws Exception {
+  public void testComputeWordCoverageVersusSlowMultipleDocs() throws Exception {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
     docsIds.add(4);
@@ -104,8 +116,8 @@ public class WordCoverageTest {
 
     final WordCoverageSlow wordCoverageSlow =
         new WordCoverageSlow(reader, ImportWiki.FieldNames.TEXT.toString());
-    final double result = wordCoverage.compute(docsIds);
     final double resultSlow = wordCoverageSlow.compute(docsIds);
-    assertEquals(resultSlow, result, 100.0);
+    final double result = wordCoverage.compute(docsIds);
+    assertEquals(result, resultSlow, 0.001);
   }
 }

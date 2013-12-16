@@ -31,6 +31,7 @@ import org.apache.lucene.util.Version;
 
 /**
  * TODO(uvictor): make sure to clean up as much unused resources as possible.
+ * TODO(uvictor): refactor to index and read in an elegant manner.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
@@ -53,14 +54,12 @@ public class ImportWiki {
     }
   }
 
-  private static class IndexArticleCallable implements Callable<Boolean> {
+  private class IndexArticleCallable implements Callable<Boolean> {
 
-    private final Logger logger;
     private final IndexWriter writer;
     private final Page article;
 
     public IndexArticleCallable(IndexWriter theWriter, Page theArticle) {
-      logger = Logger.getLogger(this.getClass());
       writer = theWriter;
       article = theArticle;
     }
@@ -68,49 +67,6 @@ public class ImportWiki {
     @Override
     public Boolean call(){
       return indexArticle(writer, article);
-    }
-
-    private boolean indexArticle(IndexWriter writer, Page article) {
-      String articleTitle = null;
-      try {
-        articleTitle = article.getTitle().getPlainTitle();
-      } catch (WikiTitleParsingException ex) {
-        logger.info("Article not logged.");
-      }
-
-      try {
-        indexPage(writer, articleTitle, article.getPlainText());
-      } catch (WikiApiException ex) {
-        if (articleTitle != null) {
-          logger.warn("Article not indexed: " + articleTitle);
-        } else {
-          logger.warn("Article not indexed.");
-        }
-        return false;
-      }
-
-      return true;
-    }
-
-    private void indexPage(IndexWriter writer, String title, String plainText) {
-      final Document document = new Document();
-
-      // StringField doesn't tokenize
-      document.add(new StringField(
-          ImportWiki.FieldNames.TITLE.toString(), title, Field.Store.YES));
-      // Field which tokenizes and has the inverted indexes.
-      FieldType indexedType = new FieldType();
-      indexedType.setStored(false);
-      indexedType.setTokenized(true);
-      indexedType.setIndexed(true);
-      indexedType.setStoreTermVectors(true);
-      document.add(new Field(
-          ImportWiki.FieldNames.TEXT.toString(), plainText,indexedType));
-      try {
-        writer.addDocument(document);
-      } catch (IOException ex) {
-        logger.warn("Page not indexed: " + title);
-      }
     }
   }
 
@@ -147,11 +103,12 @@ public class ImportWiki {
   /**
    * Visible for tests.
    */
-  public void initialiseForTest()
+  public void initialiseAndIndexForTest()
       throws WikiInitializationException, IOException, WikiApiException {
     initialiseWikiDatabase();
     initializeLuceneInRam();
     indexWikiForTest();
+    //indexForSmallTest();
 
     initialized = true;
   }
@@ -213,6 +170,13 @@ public class ImportWiki {
   private void indexWikiForTest() throws IOException, WikiApiException {
     try (final IndexWriter writer = new IndexWriter(indexDir, indexConfig)) {
       indexCategory(writer, wiki.getCategory("Video game genres"));
+    }
+  }
+
+  private void indexForSmallTest() throws IOException, WikiApiException {
+    try (final IndexWriter writer = new IndexWriter(indexDir, indexConfig)) {
+      indexPage(writer, "test1", "c b");
+      indexPage(writer, "2tset", "b");
     }
   }
 
@@ -313,5 +277,48 @@ public class ImportWiki {
     }
 
     return indexedCount;
+  }
+
+  private boolean indexArticle(IndexWriter writer, Page article) {
+    String articleTitle = null;
+    try {
+      articleTitle = article.getTitle().getPlainTitle();
+    } catch (WikiTitleParsingException ex) {
+      logger.info("Article not logged.");
+    }
+
+    try {
+      indexPage(writer, articleTitle, article.getPlainText());
+    } catch (WikiApiException ex) {
+      if (articleTitle != null) {
+        logger.warn("Article not indexed: " + articleTitle);
+      } else {
+        logger.warn("Article not indexed.");
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  private void indexPage(IndexWriter writer, String title, String plainText) {
+    final Document document = new Document();
+
+    // StringField doesn't tokenize
+    document.add(new StringField(
+        ImportWiki.FieldNames.TITLE.toString(), title, Field.Store.YES));
+    // Field which tokenizes and has the inverted indexes.
+    FieldType indexedType = new FieldType();
+    indexedType.setStored(false);
+    indexedType.setTokenized(true);
+    indexedType.setIndexed(true);
+    indexedType.setStoreTermVectors(true);
+    document.add(new Field(
+        ImportWiki.FieldNames.TEXT.toString(), plainText,indexedType));
+    try {
+      writer.addDocument(document);
+    } catch (IOException ex) {
+      logger.warn("Page not indexed: " + title);
+    }
   }
 }

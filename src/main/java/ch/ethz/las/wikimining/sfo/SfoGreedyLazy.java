@@ -15,8 +15,12 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class SfoGreedyLazy extends AbstractSfoGreedy {
 
+  final PriorityBlockingQueue<ScoreId> bestIds;
+
   public SfoGreedyLazy(ObjectiveFunction theFunction) {
     super(theFunction);
+
+    bestIds = new PriorityBlockingQueue<>();
   }
 
   /**
@@ -42,13 +46,15 @@ public class SfoGreedyLazy extends AbstractSfoGreedy {
    */
   @Override
   public Set<Integer> run(int n, int k) {
-    final Set<Integer> selected = new LinkedHashSet<>();
-    final PriorityBlockingQueue<ScoreId> bestIds
-        = new PriorityBlockingQueue<>();
-    double currentScore;
-
     logger.info("Scoring " + n + " elements.");
+    computeInitialBestIds(n);
+
+    return retrieveBestIds(n, k);
+  }
+
+  protected void computeInitialBestIds(int n) {
     for (int id = 0; id < n; ++id) {
+      final Set<Integer> selected = new LinkedHashSet<>();
       selected.add(id);
       final double score = function.compute(selected);
       selected.remove(id);
@@ -59,10 +65,13 @@ public class SfoGreedyLazy extends AbstractSfoGreedy {
         logger.info("Indexed pages: " + id);
       }
     }
+  }
 
+  private Set<Integer> retrieveBestIds(int n, int k) {
+    final Set<Integer> selected = new LinkedHashSet<>();
     final ScoreId firstDoc = bestIds.poll();
     selected.add(firstDoc.getId());
-    currentScore = firstDoc.getScore();
+    double currentScore = firstDoc.getScore();
 
     for (int i = 1; i < k; ++i) {
       ScoreId currentBest;

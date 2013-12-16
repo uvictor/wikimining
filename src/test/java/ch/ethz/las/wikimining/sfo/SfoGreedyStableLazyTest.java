@@ -30,7 +30,7 @@ public class SfoGreedyStableLazyTest {
   @BeforeClass
   public static void setUpClass() throws IOException, WikiApiException {
     wiki = new ImportWiki();
-    wiki.initialiseForTest();
+    wiki.initialiseAndIndexForTest();
   }
 
   @AfterClass

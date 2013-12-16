@@ -17,8 +17,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.similarities.DefaultSimilarity;
-import org.apache.lucene.util.BytesRef;
 
 /**
  * Computes the word coverage as equation (1) from the paper.
@@ -45,10 +45,10 @@ public class WordCoverage implements ObjectiveFunction {
     }
   }
 
+  protected final Logger logger;
   protected final String fieldName;
 
   private final IndexReader reader;
-  private final Logger logger;
   private final DefaultSimilarity similarity;
 
   /**
@@ -84,38 +84,15 @@ public class WordCoverage implements ObjectiveFunction {
     }
 
     // Max tf-idfs for all terms from the docIds documents.
-    final Map<BytesRef, Score> maxScores = new HashMap<>();
+    final Map<String, Score> maxScores = new HashMap<>();
     for (Integer docId : docIds) {
       try {
-        final Terms terms = reader.getTermVector(docId, fieldName);
-        if (terms == null) {
-          final String title =
-              reader.document(docId).get(ImportWiki.FieldNames.TITLE.toString());
-          logger.warn("Document " + title + "(" + docId + ")" + " has an empty"
-              + " term vector");
-          continue;
-        }
-
-        TermsEnum termsEnum = terms.iterator(null);
-        while (termsEnum.next() != null) {
-          final Term term = new Term(fieldName, termsEnum.term());
-          DocsEnum docsEnum = termsEnum.docs(null, null);
-          docsEnum.nextDoc();
-          final double tfIdf = computeTfIdf(docsEnum.freq(), term);
-
-          if (!maxScores.containsKey(termsEnum.term())) {
-            maxScores
-                .put(termsEnum.term(), new Score(computeWordWeight(term), tfIdf));
-          } else {
-            final Score score = maxScores.get(termsEnum.term());
-            if (tfIdf > score.getMaxTfIdf()) {
-              maxScores
-                  .put(termsEnum.term(), new Score(score.getWordWeight(), tfIdf));
-            }
-          }
+        final Terms terms = getTermsForDoc(docId);
+        if (terms != null) {
+          computeMaxScoresForDoc(terms, maxScores);
         }
       } catch (IOException ex) {
-        logger.warn("Could not read the Lucene index.");
+        logger.warn("Could not read the Lucene index.", ex);
       }
     }
 
@@ -133,7 +110,7 @@ public class WordCoverage implements ObjectiveFunction {
    * @param term the word
    *
    * @return the word weight
-   * 
+   *
    * @throws java.io.IOException
    */
   protected double computeWordWeight(Term term) throws IOException {
@@ -155,5 +132,41 @@ public class WordCoverage implements ObjectiveFunction {
     double idf = similarity.idf(reader.docFreq(term), reader.numDocs());
 
     return tf * idf;
+  }
+
+  private Terms getTermsForDoc(int docId) throws IOException {
+    final Terms terms = reader.getTermVector(docId, fieldName);
+    if (terms == null) {
+      final String title =
+          reader.document(docId).get(ImportWiki.FieldNames.TITLE.toString());
+      logger.warn("Document " + title + "(" + docId + ")" + " has an empty"
+          + " term vector");
+    }
+
+    return terms;
+  }
+
+  private void computeMaxScoresForDoc(
+      Terms terms, Map<String, Score> maxScores) throws IOException {
+    TermsEnum termsEnum = terms.iterator(null);
+
+    while (termsEnum.next() != null) {
+      final Term term = new Term(fieldName, termsEnum.term());
+      final String word = term.text();
+      DocsEnum docsEnum = termsEnum.docs(null, null);
+      docsEnum.nextDoc();
+      final double tfIdf = computeTfIdf(docsEnum.freq(), term);
+
+      final Score score = maxScores.get(word);
+      if (score == null) {
+        maxScores
+            .put(word, new Score(computeWordWeight(term), tfIdf));
+      } else if (tfIdf > score.getMaxTfIdf()) {
+        maxScores
+            .put(word, new Score(score.getWordWeight(), tfIdf));
+      }
+
+      assert docsEnum.nextDoc() == DocIdSetIterator.NO_MORE_DOCS;
+    }
   }
 }

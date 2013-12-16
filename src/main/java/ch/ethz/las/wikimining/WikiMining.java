@@ -29,6 +29,9 @@ public class WikiMining {
     final long time = (System.currentTimeMillis() - start) / 1000;
     System.out.println("Finished importing after " + time + " seconds.");
 
+
+    System.out.println(wiki.getWiki().getPage("US").getTitle());
+
     // Initialize Lucene reading
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {
       final ObjectiveFunction objectiveFunction =

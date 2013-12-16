@@ -31,7 +31,6 @@ public class WordCoverageSlow extends WordCoverage {
 
   /**
    * Computes the word coverage as equation (1) from the paper.
-   * @deprecated use {@link computeWordCoverage} instead
    *
    * Does this by iterating through all documents of a given term, for all
    * terms, which is slow.
@@ -42,31 +41,35 @@ public class WordCoverageSlow extends WordCoverage {
    *
    * @throws java.io.IOException
    */
-  public double computeWordCoverageSlow(Set<Integer> docsIds)
-      throws IOException {
+  @Override
+  public double compute(Set<Integer> docsIds) {
     assert docsIds != null;
     if (docsIds.isEmpty()) {
       return 0;
     }
 
     double sum = 0;
-    termsEnum = allTerms.iterator(termsEnum);
-    while (termsEnum.next() != null) {
-      double maxTfIdf = 0;
-      final Term term = new Term(fieldName, termsEnum.term());
-      docsEnum = termsEnum.docs(null, docsEnum);
+    try {
+      termsEnum = allTerms.iterator(termsEnum);
+      while (termsEnum.next() != null) {
+        double maxTfIdf = 0;
+        final Term term = new Term(fieldName, termsEnum.term());
+        docsEnum = termsEnum.docs(null, docsEnum);
 
-      while(docsEnum.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
-        if (docsIds.contains(docsEnum.docID())) {
-          // TODO(uvictor): try to memoize the maxima (for each word?)
-          final double tfIdf = computeTfIdf(docsEnum.freq(), term);
-          if (tfIdf > maxTfIdf) {
-            maxTfIdf = tfIdf;
+        while(docsEnum.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+          if (docsIds.contains(docsEnum.docID())) {
+            // TODO(uvictor): try to memoize the maxima (for each word?)
+            final double tfIdf = computeTfIdf(docsEnum.freq(), term);
+            if (tfIdf > maxTfIdf) {
+              maxTfIdf = tfIdf;
+            }
           }
         }
-      }
 
-      sum += computeWordWeight(term) * maxTfIdf;
+        sum += computeWordWeight(term) * maxTfIdf;
+      }
+    } catch (IOException ex) {
+      logger.warn("Could not read the Lucene index.");
     }
 
     return sum;
