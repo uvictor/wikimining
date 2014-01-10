@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,32 +15,44 @@ import java.util.Set;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class SfoGreedyStableLazy extends AbstractSfoGreedy {
+  
+  private final Set<Integer> selected = new LinkedHashSet<>();
+  private final ArrayList<ScoreId> bestIds = new ArrayList<>();
+  private double currentScore;
 
   public SfoGreedyStableLazy(ObjectiveFunction theFunction) {
     super(theFunction);
   }
 
-  /**
-   * Runs the SFO greedy algorithm lazily with stable sort.
-   *
-   * @param n the total number of elements
-   * @param k the number of ids to be selected
-   *
-   * @return the selected ids
-   */
   @Override
-  public Set<Integer> run(int n, int k) {
-    final Set<Integer> selected = new LinkedHashSet<>();
-    final ArrayList<ScoreId> bestIds = new ArrayList<>();
-    double currentScore;
-
+  protected void computeInitialBestIds(int n) {
     for (int id = 0; id < n; ++id) {
-        selected.add(id);
-        final double score = function.compute(selected);
-        selected.remove(id);
-
-        bestIds.add(new ScoreId(score, id));
+      scoreId(id);
     }
+  }
+
+  @Override
+  protected void computeInitialBestIds(List<Integer> ids) {
+    for (int id : ids) {
+      scoreId(id);
+    }
+  }
+
+  private void scoreId(int id) {
+    final Set<Integer> selected = new LinkedHashSet<>();
+    selected.add(id);
+    final double score = function.compute(selected);
+    selected.remove(id);
+
+    bestIds.add(new ScoreId(score, id));
+
+    if ((id + 1) % 1000 == 0) {
+      logger.info("Indexed pages: " + id);
+    }
+  }
+
+  @Override
+  protected Set<Integer> retrieveBestIds(int k) {
     Collections.sort(bestIds, new Comparator<ScoreId>() {
       @Override
       public int compare(ScoreId o1, ScoreId o2) {
@@ -85,5 +98,4 @@ public class SfoGreedyStableLazy extends AbstractSfoGreedy {
 
     return selected;
   }
-
 }

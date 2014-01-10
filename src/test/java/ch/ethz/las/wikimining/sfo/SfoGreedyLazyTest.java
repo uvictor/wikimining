@@ -2,7 +2,7 @@ package ch.ethz.las.wikimining.sfo;
 
 import ch.ethz.las.wikimining.ImportWiki;
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
-import ch.ethz.las.wikimining.functions.WordCoverage;
+import ch.ethz.las.wikimining.functions.WordCoverageFromLucene;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 import java.io.IOException;
 import java.util.Set;
@@ -42,7 +42,7 @@ public class SfoGreedyLazyTest {
   public void setUp() throws IOException {
     final IndexReader reader = DirectoryReader.open(wiki.getIndexDir());
     final ObjectiveFunction objectiveFunction
-        = new WordCoverage(reader, ImportWiki.FieldNames.TEXT.toString());
+        = new WordCoverageFromLucene(reader, ImportWiki.FieldNames.TEXT.toString());
 
     docsCount = reader.numDocs();
     greedyNonLazy = new SfoGreedyNonLazy(objectiveFunction);

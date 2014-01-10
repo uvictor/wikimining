@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.apache.log4j.Logger;
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -21,31 +20,13 @@ import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.similarities.DefaultSimilarity;
 
 /**
- * Computes the word coverage as equation (1) from the paper.
+ * Computes the word coverage as equation (1) from the paper, from a Lucene
+ * index.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverage implements ObjectiveFunction {
+public class WordCoverageFromLucene extends AbstractWordCoverage {
 
-  protected static class Score {
-    double wordWeight;
-    double maxTfIdf;
-
-    public Score(double tf, double idf) {
-      this.wordWeight = tf;
-      this.maxTfIdf = idf;
-    }
-
-    public double getWordWeight() {
-      return wordWeight;
-    }
-
-    public double getMaxTfIdf() {
-      return maxTfIdf;
-    }
-  }
-
-  protected final Logger logger;
   protected final String fieldName;
 
   private final IndexReader reader;
@@ -57,11 +38,10 @@ public class WordCoverage implements ObjectiveFunction {
    * @param theReader used to get the documents' scores
    * @param theFieldName name of the indexed field
    */
-  public WordCoverage(IndexReader theReader, String theFieldName) {
+  public WordCoverageFromLucene(IndexReader theReader, String theFieldName) {
     reader = theReader;
     fieldName = theFieldName;
 
-    logger = Logger.getLogger(this.getClass());
     similarity = new DefaultSimilarity();
   }
 

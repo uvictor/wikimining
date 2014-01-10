@@ -1,7 +1,7 @@
 package ch.ethz.las.wikimining;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
-import ch.ethz.las.wikimining.functions.WordCoverage;
+import ch.ethz.las.wikimining.functions.WordCoverageFromLucene;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
@@ -35,7 +35,7 @@ public class WikiMining {
     // Initialize Lucene reading
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {
       final ObjectiveFunction objectiveFunction =
-          new WordCoverage(reader, ImportWiki.FieldNames.TEXT.toString());
+          new WordCoverageFromLucene(reader, ImportWiki.FieldNames.TEXT.toString());
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
       final ArrayList<ArrayList<Integer>> G = readGraph();
 

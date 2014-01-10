@@ -14,7 +14,7 @@ import org.apache.lucene.search.DocIdSetIterator;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageSlow extends WordCoverage {
+public class WordCoverageFromLuceneSlow extends WordCoverageFromLucene {
 
   private final Terms allTerms;
 
@@ -23,7 +23,7 @@ public class WordCoverageSlow extends WordCoverage {
   private TermsEnum termsEnum;
   private DocsEnum docsEnum;
 
-  public WordCoverageSlow(IndexReader theReader, String theFieldName) throws IOException {
+  public WordCoverageFromLuceneSlow(IndexReader theReader, String theFieldName) throws IOException {
     super(theReader, theFieldName);
 
     allTerms = SlowCompositeReaderWrapper.wrap(theReader).terms(theFieldName);

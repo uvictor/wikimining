@@ -26,7 +26,7 @@ import org.junit.Test;
 public class WordCoverageTest {
   private static ImportWiki wiki;
   private IndexReader reader;
-  private WordCoverage wordCoverage;
+  private WordCoverageFromLucene wordCoverage;
 
   @BeforeClass
   public static void setUpClass() throws Exception {
@@ -43,7 +43,7 @@ public class WordCoverageTest {
   public void setUp() throws Exception {
     reader = DirectoryReader.open(wiki.getIndexDir());
     wordCoverage =
-        new WordCoverage(reader, ImportWiki.FieldNames.TEXT.toString());
+        new WordCoverageFromLucene(reader, ImportWiki.FieldNames.TEXT.toString());
   }
 
   @After
@@ -100,8 +100,8 @@ public class WordCoverageTest {
     final Set<Integer> docsIds = new HashSet<>();
     docsIds.add(1);
 
-    final WordCoverageSlow wordCoverageSlow =
-        new WordCoverageSlow(reader, ImportWiki.FieldNames.TEXT.toString());
+    final WordCoverageFromLuceneSlow wordCoverageSlow =
+        new WordCoverageFromLuceneSlow(reader, ImportWiki.FieldNames.TEXT.toString());
     final double result = wordCoverage.compute(docsIds);
     final double resultSlow = wordCoverageSlow.compute(docsIds);
     assertEquals(resultSlow, result, 0.001);
@@ -114,8 +114,8 @@ public class WordCoverageTest {
     docsIds.add(4);
     docsIds.add(10);
 
-    final WordCoverageSlow wordCoverageSlow =
-        new WordCoverageSlow(reader, ImportWiki.FieldNames.TEXT.toString());
+    final WordCoverageFromLuceneSlow wordCoverageSlow =
+        new WordCoverageFromLuceneSlow(reader, ImportWiki.FieldNames.TEXT.toString());
     final double resultSlow = wordCoverageSlow.compute(docsIds);
     final double result = wordCoverage.compute(docsIds);
     assertEquals(result, resultSlow, 0.001);

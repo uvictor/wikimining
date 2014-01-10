@@ -6,6 +6,7 @@
 
 package ch.ethz.las.wikimining.sfo;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -23,4 +24,14 @@ public interface SfoGreedyAlgorithm {
    * @return the selected ids
    */
   public abstract Set<Integer> run(int n, int k);
+
+  /**
+   * Runs a SFO greedy algorithm.
+   *
+   * @param ids the elements from which to select a subset
+   * @param k the number of ids to be selected
+   *
+   * @return the selected ids
+   */
+  public abstract Set<Integer> run(List<Integer> ids, int k);
 }

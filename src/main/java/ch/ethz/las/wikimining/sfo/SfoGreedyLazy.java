@@ -2,6 +2,7 @@ package ch.ethz.las.wikimining.sfo;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -15,7 +16,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class SfoGreedyLazy extends AbstractSfoGreedy {
 
-  final PriorityBlockingQueue<ScoreId> bestIds;
+  private final PriorityBlockingQueue<ScoreId> bestIds;
 
   public SfoGreedyLazy(ObjectiveFunction theFunction) {
     super(theFunction);
@@ -23,51 +24,35 @@ public class SfoGreedyLazy extends AbstractSfoGreedy {
     bestIds = new PriorityBlockingQueue<>();
   }
 
-  /**
-   * Runs the SFO greedy algorithm lazily.
-   * <p>
-   * Note: this implementation uses a non-stable sorting mechanism - ie. a heap.
-   * <p>
-   * Important: if this function changes the index, docIds might be
-   * inconsistent!
-   * <p>
-   * TODO(uvictor): make this method use multiple threads.
-   * <p>
-   * TODO(uvictor): make this method easier to understand.
-   * <p>
-   * TODO(uvictor): check the difference between removing the document from A
-   * and not removing it. If this function will change the index. Change the API
-   * to mention this to the caller.
-   * <p>
-   * @param n the total number of elements
-   * @param k the number of ids to be selected
-   * <p>
-   * @return the selected ids
-   */
   @Override
-  public Set<Integer> run(int n, int k) {
-    logger.info("Scoring " + n + " elements.");
-    computeInitialBestIds(n);
-
-    return retrieveBestIds(n, k);
-  }
-
   protected void computeInitialBestIds(int n) {
     for (int id = 0; id < n; ++id) {
-      final Set<Integer> selected = new LinkedHashSet<>();
-      selected.add(id);
-      final double score = function.compute(selected);
-      selected.remove(id);
-
-      bestIds.add(new ScoreId(score, id));
-
-      if ((id + 1) % 1000 == 0) {
-        logger.info("Indexed pages: " + id);
-      }
+      scoreId(id);
     }
   }
 
-  private Set<Integer> retrieveBestIds(int n, int k) {
+  @Override
+  protected void computeInitialBestIds(List<Integer> ids) {
+    for (int id : ids) {
+      scoreId(id);
+    }
+  }
+
+  private void scoreId(int id) {
+    final Set<Integer> selected = new LinkedHashSet<>();
+    selected.add(id);
+    final double score = function.compute(selected);
+    selected.remove(id);
+
+    bestIds.add(new ScoreId(score, id));
+
+    if ((id + 1) % 1000 == 0) {
+      logger.info("Indexed pages: " + id);
+    }
+  }
+
+  @Override
+  protected Set<Integer> retrieveBestIds(int k) {
     final Set<Integer> selected = new LinkedHashSet<>();
     final ScoreId firstDoc = bestIds.poll();
     selected.add(firstDoc.getId());
