@@ -22,6 +22,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -30,23 +31,11 @@ import org.apache.mahout.math.VectorWritable;
 
 /**
  * Computes the word coverage as equation (1) from the paper, from a Mahout
- * index, using MapReduce and the GreeDi protocol.
+ * index, using MapReduce and the GreeDi protocol. First pass.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class DocumentWordCoverage extends Configured implements Tool {
-  private static final int DEFAULT_PARTITION_COUNT = 16;
-
-  private static final String INPUT_OPTION = "input";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String PARTITION_COUNT_OPTION = "partitions";
-
-  private static final Logger logger
-      = Logger.getLogger(DocumentWordCoverage.class);
-
-  private String inputPath;
-  private String outputPath;
-  private int partitionCount;
+public class WordCoverageFirstGreeDi extends Configured implements Tool {
 
   private static class Map extends
       Mapper<Text, VectorWritable, IntWritable, DocumentWithVectorWritable> {
@@ -54,7 +43,9 @@ public class DocumentWordCoverage extends Configured implements Tool {
     @Override
     public void map(Text key, VectorWritable value, Context context)
         throws IOException, InterruptedException {
-      final int partition = Integer.parseInt(key.toString()) % DEFAULT_PARTITION_COUNT;
+      final int partitionCount = context.getConfiguration()
+          .getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
+      final int partition = Integer.parseInt(key.toString()) % partitionCount;
       final IntWritable outKey = new IntWritable(partition);
 
       final DocumentWithVectorWritable outValue =
@@ -74,8 +65,10 @@ public class DocumentWordCoverage extends Configured implements Tool {
       final WordCoverageFromMahout objectiveFunction =
           new WordCoverageFromMahout(values);
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
+      final int partitionCount = context.getConfiguration()
+          .getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
       Set<Integer> selected =
-          sfo.run(objectiveFunction.getAllDocIds(), DEFAULT_PARTITION_COUNT);
+          sfo.run(objectiveFunction.getAllDocIds(), partitionCount);
 
       for (Integer docId : selected) {
         IntWritable outValue = new IntWritable(docId);
@@ -84,7 +77,21 @@ public class DocumentWordCoverage extends Configured implements Tool {
     }
   }
 
-  public DocumentWordCoverage() { }
+  private static final int DEFAULT_PARTITION_COUNT = 16;
+  private static final String PARTITION_COUNT_FIELD = "PartitionCountField";
+
+  private static final String INPUT_OPTION = "input";
+  private static final String OUTPUT_OPTION = "output";
+  private static final String PARTITION_COUNT_OPTION = "partitions";
+
+  private static final Logger logger =
+      Logger.getLogger(WordCoverageFirstGreeDi.class);
+
+  private String inputPath;
+  private String outputPath;
+  private int partitionCount;
+
+  public WordCoverageFirstGreeDi() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -94,16 +101,22 @@ public class DocumentWordCoverage extends Configured implements Tool {
     }
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(DocumentWordCoverage.class);
-    job.setJobName(String.format("DocumentWordCoverage[%s]", DEFAULT_PARTITION_COUNT));
+    job.setJarByClass(WordCoverageFirstGreeDi.class);
+    job.setJobName(String.format("DocumentWordCoverage[%s]", partitionCount));
 
-    job.setNumReduceTasks(DEFAULT_PARTITION_COUNT);
+    job.getConfiguration().setInt(PARTITION_COUNT_FIELD, partitionCount);
+
+    job.setNumReduceTasks(partitionCount);
 
     SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
-    TextOutputFormat.setOutputPath(job, new Path(outputPath));
+    FileOutputFormat.setOutputPath(job, new Path(outputPath));
+    FileOutputFormat.setCompressOutput(job, false);
 
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);
+
+    job.setMapOutputKeyClass(IntWritable.class);
+    job.setMapOutputValueClass(DocumentWithVectorWritable.class);
     job.setOutputKeyClass(NullWritable.class);
     job.setOutputValueClass(IntWritable.class);
 
@@ -137,8 +150,7 @@ public class DocumentWordCoverage extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION) ||
-        !cmdline.hasOption(PARTITION_COUNT_OPTION)) {
+    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -147,7 +159,7 @@ public class DocumentWordCoverage extends Configured implements Tool {
 
     inputPath = cmdline.getOptionValue(INPUT_OPTION);
     outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
-    
+
     partitionCount = DEFAULT_PARTITION_COUNT;
     if (cmdline.hasOption(PARTITION_COUNT_OPTION)) {
       partitionCount =
@@ -159,10 +171,15 @@ public class DocumentWordCoverage extends Configured implements Tool {
       }
     }
 
+    logger.info("Tool name: " + this.getClass().getName());
+    logger.info(" - input: " + inputPath);
+    logger.info(" - output: " + outputPath);
+    logger.info(" - patitions: " + partitionCount);
+
     return 0;
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new DocumentWordCoverage(), args);
+    ToolRunner.run(new WordCoverageFirstGreeDi(), args);
   }
 }

@@ -13,7 +13,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -43,8 +42,6 @@ public class WikiToPlainText extends Configured implements Tool {
   private static class MyMapper extends
       Mapper<LongWritable, WikipediaPage, Text, Text> {
 
-    private static final IntWritable docno = new IntWritable();
-
     @Override
     public void map(LongWritable key, WikipediaPage doc, Context context)
         throws IOException, InterruptedException {
@@ -56,11 +53,8 @@ public class WikiToPlainText extends Configured implements Tool {
     }
   }
 
-  private static final String DOCNO_MAPPING_FIELD = "DocnoMappingDataFile";
-
   private static final String INPUT_OPTION = "input";
   private static final String OUTPUT_OPTION = "output";
-  private static final String MAPPING_FILE_OPTION = "mapping_file";
   private static final String COMPRESSION_TYPE_OPTION = "compression_type";
   private static final String LANGUAGE_OPTION = "wiki_language";
 
@@ -72,8 +66,6 @@ public class WikiToPlainText extends Configured implements Tool {
         .withDescription("XML dump file").create(INPUT_OPTION));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("output location").create(OUTPUT_OPTION));
-    options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("mapping file").create(MAPPING_FILE_OPTION));
     options.addOption(OptionBuilder.withArgName("block|record|none").hasArg()
         .withDescription("compression type").create(COMPRESSION_TYPE_OPTION));
     options.addOption(OptionBuilder.withArgName("en|sv|de").hasArg()
@@ -89,7 +81,7 @@ public class WikiToPlainText extends Configured implements Tool {
     }
 
     if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)
-        || !cmdline.hasOption(MAPPING_FILE_OPTION) || !cmdline.hasOption(COMPRESSION_TYPE_OPTION)) {
+        || !cmdline.hasOption(COMPRESSION_TYPE_OPTION)) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -98,7 +90,6 @@ public class WikiToPlainText extends Configured implements Tool {
 
     String inputPath = cmdline.getOptionValue(INPUT_OPTION);
     String outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
-    String mappingFile = cmdline.getOptionValue(MAPPING_FILE_OPTION);
     String compressionType = cmdline.getOptionValue(COMPRESSION_TYPE_OPTION);
 
     if (!"block".equals(compressionType) && !"record".equals(compressionType) && !"none".equals(compressionType)) {
@@ -124,12 +115,9 @@ public class WikiToPlainText extends Configured implements Tool {
         INPUT_OPTION, inputPath, OUTPUT_OPTION, outputPath, COMPRESSION_TYPE_OPTION,
         compressionType, LANGUAGE_OPTION, language));
 
-    job.getConfiguration().set(DOCNO_MAPPING_FIELD, mappingFile);
-
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - XML dump file: " + inputPath);
     logger.info(" - output path: " + outputPath);
-    logger.info(" - docno mapping data file: " + mappingFile);
     logger.info(" - compression type: " + compressionType);
     logger.info(" - language: " + language);
 

@@ -60,7 +60,6 @@ public class SfoGreedyNonLazy implements SfoGreedyAlgorithm {
   /**
    * Runs the SFO greedy algorithm non-lazily.
    * <p>
-   * @param n the total number of elements
    * @param k the number of ids to be selected
    * <p>
    * @return the selected ids

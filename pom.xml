@@ -27,7 +27,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>ch.ethz.las.wikimining.WikiMining</mainClass>
+<!--              <mainClass>ch.ethz.las.wikimining.WikiMining</mainClass> -->
               <addClasspath>true</addClasspath>
               <classpathPrefix>dependency/</classpathPrefix>
             </manifest>
@@ -109,6 +109,11 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>2.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>info.bliki.wiki</groupId>
+      <artifactId>bliki-core</artifactId>
+      <version>3.0.19</version>
     </dependency>
   </dependencies>
 </project>

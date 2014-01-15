@@ -34,8 +34,8 @@ public class WikiMining {
 
     // Initialize Lucene reading
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {
-      final ObjectiveFunction objectiveFunction =
-          new WordCoverageFromLucene(reader, ImportWiki.FieldNames.TEXT.toString());
+      final ObjectiveFunction objectiveFunction = new WordCoverageFromLucene(
+              reader, ImportWiki.FieldNames.TEXT.toString());
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
       final ArrayList<ArrayList<Integer>> G = readGraph();
 

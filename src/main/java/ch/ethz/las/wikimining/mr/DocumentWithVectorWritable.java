@@ -12,8 +12,10 @@ import org.apache.mahout.math.VectorWritable;
  * Stores a document id along with its tf-idf vectors.
  */
 public class DocumentWithVectorWritable implements Writable {
-  private final Text id;
-  private final VectorWritable vector;
+  private Text id;
+  private VectorWritable vector;
+
+  public DocumentWithVectorWritable() { }
 
   public DocumentWithVectorWritable(Text theId, VectorWritable theVector) {
     id = theId;
@@ -36,6 +38,9 @@ public class DocumentWithVectorWritable implements Writable {
 
   @Override
   public void readFields(DataInput in) throws IOException {
+    id = new Text();
+    vector = new VectorWritable();
+
     id.readFields(in);
     vector.readFields(in);
   }

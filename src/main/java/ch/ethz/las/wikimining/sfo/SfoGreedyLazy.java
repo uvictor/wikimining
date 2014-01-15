@@ -45,10 +45,6 @@ public class SfoGreedyLazy extends AbstractSfoGreedy {
     selected.remove(id);
 
     bestIds.add(new ScoreId(score, id));
-
-    if ((id + 1) % 1000 == 0) {
-      logger.info("Indexed pages: " + id);
-    }
   }
 
   @Override
