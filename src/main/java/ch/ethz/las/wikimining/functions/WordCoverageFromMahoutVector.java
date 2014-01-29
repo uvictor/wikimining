@@ -12,13 +12,11 @@ import org.apache.mahout.math.Vector.Element;
 
 /**
  * Computes the word coverage as equation (1) from the paper, from a Mahout
- * index.
- * <p>
- * TODO(uvictor): use Vector.aggregate to keep the max.
+ * index. Uses mostly vector operations.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageFromMahout extends AbstractWordCoverage {
+public class WordCoverageFromMahoutVector extends AbstractWordCoverage {
 
   final List<Integer> allDocIds;
   final Map<Integer, Vector> documents;
@@ -26,12 +24,12 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
   /**
    * Creates an object used to compute the necessary word coverage score.
    */
-  public WordCoverageFromMahout(
+  public WordCoverageFromMahoutVector(
       Iterable<DocumentWithVectorWritable> theDocuments) {
     this(theDocuments.iterator());
   }
 
-  public WordCoverageFromMahout(
+  public WordCoverageFromMahoutVector(
       Iterator<DocumentWithVectorWritable> theDocuments) {
     allDocIds = new ArrayList<>();
     documents = new HashMap<>();
@@ -63,7 +61,7 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
     }
 
     // Max tf-idfs for all terms from the allDocIds documents.
-    final Map<Integer, Score> maxScores = new HashMap<>();
+    final Map<Integer, AbstractWordCoverage.Score> maxScores = new HashMap<>();
     for (Integer docId : docIds) {
       final Iterable<Element> terms = getTermsForDoc(docId);
       if (terms != null) {
@@ -72,7 +70,7 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
     }
 
     double sum = 0;
-    for (Score score : maxScores.values()) {
+    for (AbstractWordCoverage.Score score : maxScores.values()) {
       sum += score.getWordWeight() * score.getMaxTfIdf();
     }
 
@@ -84,18 +82,18 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
   }
 
   private void computeMaxScoresForDoc(
-      Iterable<Element> terms, Map<Integer, Score> maxScores) {
+      Iterable<Element> terms, Map<Integer, AbstractWordCoverage.Score> maxScores) {
     for (Element term : terms) {
       final Integer word = term.index();
       final double tfIdf = term.get();
 
-      final Score score = maxScores.get(word);
+      final AbstractWordCoverage.Score score = maxScores.get(word);
       if (score == null) {
         maxScores
-            .put(word, new Score(computeWordWeight(term), tfIdf));
+            .put(word, new AbstractWordCoverage.Score(computeWordWeight(term), tfIdf));
       } else if (tfIdf > score.getMaxTfIdf()) {
         maxScores
-            .put(word, new Score(score.getWordWeight(), tfIdf));
+            .put(word, new AbstractWordCoverage.Score(score.getWordWeight(), tfIdf));
       }
     }
   }

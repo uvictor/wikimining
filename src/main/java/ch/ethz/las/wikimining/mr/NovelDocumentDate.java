@@ -3,6 +3,12 @@ package ch.ethz.las.wikimining.mr;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPageInputFormat;
 import java.io.IOException;
+import java.util.Calendar;
+import javax.xml.bind.DatatypeConverter;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -13,9 +19,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.ArrayWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -23,84 +29,71 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
+import org.apache.tools.ant.filters.StringInputStream;
 
 /**
- * Tool for repacking Wikipedia XML dumps into <code>SequenceFiles</code>.
+ * Tool for extracting a date for each @{WikipediaPage}.
  * <p>
- * @author Jimmy Lin
- * @author Peter Exner
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WikiToPlainText extends Configured implements Tool {
-
-  private static final Logger logger = Logger.getLogger(WikiToPlainText.class);
-
-  private static enum PageTypes {
-    TOTAL, REDIRECT, DISAMBIGUATION, EMPTY, ARTICLE, STUB, NON_ARTICLE, OTHER
-  };
-
-  private static class MyMapper extends
-      Mapper<LongWritable, WikipediaPage, Text, Text> {
-
-    @Override
-    public void map(LongWritable key, WikipediaPage doc, Context context)
-        throws IOException, InterruptedException {
-      context.getCounter(PageTypes.TOTAL).increment(1);
-      String id = doc.getDocid();
-      
-      if (id != null && isArticle(doc, context)) {
-        // TODO(uvictor): remove hack for Cloud9's WikipediaPage.getContent()
-        final Text docContent;
-        try {
-          docContent = new Text(doc.getContent());
-        } catch (NullPointerException e) {
-          logger.error("WikipediaPage.getContent() NullPointerExcetion", e);
-          return;
-        }
-
-        context.write(new Text(id), docContent);
-      }
-    }
-
-    public boolean isArticle(WikipediaPage doc, Context context) {
-      if (doc.isRedirect()) {
-        context.getCounter(PageTypes.REDIRECT).increment(1);
-        return false;
-      }
-      if (doc.isEmpty()) {
-        context.getCounter(PageTypes.EMPTY).increment(1);
-        return false;
-      }
-      if (doc.isDisambiguation()) {
-        context.getCounter(PageTypes.DISAMBIGUATION).increment(1);
-        return false;
-      }
-
-      if (doc.isArticle()) {
-        // heuristic: potentially template or stub article
-        if (doc.getTitle().length() > 0.3 * doc.getContent().length()) {
-          context.getCounter(PageTypes.OTHER).increment(1);
-          return false;
-        }
-
-        if (doc.isStub()) {
-          context.getCounter(PageTypes.STUB).increment(1);
-        } else {
-          context.getCounter(PageTypes.ARTICLE).increment(1);
-        }
-
-        return true;
-      }
-
-      context.getCounter(PageTypes.NON_ARTICLE).increment(1);
-      return false;
-    }
-  }
+public class NovelDocumentDate extends Configured implements Tool {
 
   private static final String INPUT_OPTION = "input";
   private static final String OUTPUT_OPTION = "output";
   private static final String COMPRESSION_TYPE_OPTION = "compression_type";
-  private static final String LANGUAGE_OPTION = "wiki_language";
+
+  private static final Logger logger =
+      Logger.getLogger(NovelDocumentDate.class);
+
+  private static enum Records {
+
+    TOTAL
+  };
+
+  private static class MyMapper extends
+      Mapper<IntWritable, WikipediaPage, IntWritable, ArrayWritable> {
+
+    @Override
+    public void map(IntWritable key, WikipediaPage doc, Context context)
+        throws IOException, InterruptedException {
+      context.getCounter(Records.TOTAL).increment(1);
+      final IntWritable id = new IntWritable(Integer.parseInt(doc.getDocid()));
+
+      try {
+        final Calendar date = getPageTimeStamp(doc.getRawXML());
+        final IntWritable[] dateArray = new IntWritable[2];
+        dateArray[0] = new IntWritable(date.get(Calendar.YEAR));
+        dateArray[1] = new IntWritable(date.get(Calendar.DAY_OF_YEAR));
+
+        final ArrayWritable dateWritable =
+            new ArrayWritable(IntWritable.class, dateArray);
+        context.write(id, dateWritable);
+      } catch (XMLStreamException ex) {
+        logger.warn("Couldn't get the XML date for docid " + id, ex);
+      }
+    }
+
+    private Calendar getPageTimeStamp(String xml) throws XMLStreamException {
+    String timestamp = null;
+    XMLInputFactory factory = XMLInputFactory.newInstance();
+    XMLStreamReader reader =
+        factory.createXMLStreamReader(new StringInputStream(xml));
+
+    while(reader.hasNext()){
+      int event = reader.next();
+
+      if (event == XMLStreamConstants.CHARACTERS) {
+        timestamp = reader.getText();
+      } else if (event == XMLStreamConstants.END_ELEMENT) {
+        if ("timestamp".equals(reader.getLocalName())) {
+          break;
+        }
+      }
+    }
+
+    return DatatypeConverter.parseDateTime(timestamp);
+    }
+  }
 
   @SuppressWarnings("static-access")
   @Override
@@ -112,8 +105,6 @@ public class WikiToPlainText extends Configured implements Tool {
         .withDescription("output location").create(OUTPUT_OPTION));
     options.addOption(OptionBuilder.withArgName("block|record|none").hasArg()
         .withDescription("compression type").create(COMPRESSION_TYPE_OPTION));
-    options.addOption(OptionBuilder.withArgName("en|sv|de").hasArg()
-        .withDescription("two-letter language code").create(LANGUAGE_OPTION));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -141,29 +132,20 @@ public class WikiToPlainText extends Configured implements Tool {
       return -1;
     }
 
-    String language = null;
-    if (cmdline.hasOption(LANGUAGE_OPTION)) {
-      language = cmdline.getOptionValue(LANGUAGE_OPTION);
-      if (language.length() != 2) {
-        System.err.println("Error: \"" + language + "\" unknown language!");
-        return -1;
-      }
-    }
-
     // this is the default block size
     int blocksize = 1000000;
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(WikiToPlainText.class);
-    job.setJobName(String.format("RepackWikipedia[%s: %s, %s: %s, %s: %s, %s: %s]",
-        INPUT_OPTION, inputPath, OUTPUT_OPTION, outputPath, COMPRESSION_TYPE_OPTION,
-        compressionType, LANGUAGE_OPTION, language));
+    job.setJarByClass(NovelDocumentDate.class);
+    job.setJobName(
+        String.format("NovelDocumentDate[%s: %s, %s: %s, %s: %s, %s: %s]",
+        INPUT_OPTION, inputPath, OUTPUT_OPTION, outputPath,
+        COMPRESSION_TYPE_OPTION, compressionType));
 
     logger.info("Tool name: " + this.getClass().getName());
-    logger.info(" - XML dump file: " + inputPath);
+    logger.info(" - input path: " + inputPath);
     logger.info(" - output path: " + outputPath);
     logger.info(" - compression type: " + compressionType);
-    logger.info(" - language: " + language);
 
     if ("block".equals(compressionType)) {
       logger.info(" - block size: " + blocksize);
@@ -187,14 +169,10 @@ public class WikiToPlainText extends Configured implements Tool {
       }
     }
 
-    if (language != null) {
-      job.getConfiguration().set("wiki.language", language);
-    }
-
     job.setInputFormatClass(WikipediaPageInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(Text.class);
+    job.setOutputKeyClass(IntWritable.class);
+    job.setOutputValueClass(ArrayWritable.class);
 
     job.setMapperClass(MyMapper.class);
 
@@ -206,10 +184,10 @@ public class WikiToPlainText extends Configured implements Tool {
     return 0;
   }
 
-  public WikiToPlainText() {
+  public NovelDocumentDate() {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new WikiToPlainText(), args);
+    ToolRunner.run(new NovelDocumentDate(), args);
   }
 }

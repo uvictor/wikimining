@@ -4,6 +4,7 @@ import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,12 +19,16 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -32,10 +37,11 @@ import org.apache.mahout.math.VectorWritable;
 /**
  * Computes the word coverage as equation (1) from the paper, from a Mahout
  * index, using MapReduce and the GreeDi protocol. First pass.
+ * @deprecated for Hadoop 1.0.4
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageFirstGreeDi extends Configured implements Tool {
+public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
 
   private static final int DEFAULT_PARTITION_COUNT = 400;
   private static final String PARTITION_COUNT_FIELD = "PartitionCountField";
@@ -48,44 +54,61 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
   private static final String SELECT_COUNT_OPTION = "select";
 
   private static final Logger logger =
-      Logger.getLogger(WordCoverageFirstGreeDi.class);
+      Logger.getLogger(WordCoverageFirstGreeDiH104.class);
 
-  private static class Map extends
-      Mapper<Text, VectorWritable, IntWritable, DocumentWithVectorWritable> {
+  private static class Map extends MapReduceBase implements Mapper<
+      Text, VectorWritable, IntWritable, DocumentWithVectorWritable> {
+
+    int partitionCount;
 
     @Override
-    public void map(Text key, VectorWritable value, Context context)
-        throws IOException, InterruptedException {
-      final int partitionCount = context.getConfiguration()
-          .getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
+    public void configure(JobConf job) {
+      partitionCount =
+          job.getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
+    }
+
+    @Override
+    public void map(Text key, VectorWritable value, OutputCollector<IntWritable,
+        DocumentWithVectorWritable> output, Reporter reporter)
+        throws IOException {
       final int partition = Integer.parseInt(key.toString()) % partitionCount;
       final IntWritable outKey = new IntWritable(partition);
 
       final DocumentWithVectorWritable outValue =
           new DocumentWithVectorWritable(key, value);
 
-      context.write(outKey, outValue);
+      output.collect(outKey, outValue);
     }
   }
 
-  private static class Reduce extends Reducer<
+  private static class Reduce extends MapReduceBase implements Reducer<
       IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
+
+    int selectCount;
+
+    @Override
+    public void configure(JobConf job) {
+      selectCount = job.getInt(SELECT_COUNT_FIELD, DEFAULT_SELECT_COUNT);
+    }
 
     @Override
     public void reduce(IntWritable key,
-        Iterable<DocumentWithVectorWritable> values, Context context)
-        throws IOException, InterruptedException {
+        Iterator<DocumentWithVectorWritable> values,
+        OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
+        throws IOException {
       final WordCoverageFromMahout objectiveFunction =
           new WordCoverageFromMahout(values);
-      final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
-      final int selectCount = context.getConfiguration()
-          .getInt(SELECT_COUNT_FIELD, DEFAULT_SELECT_COUNT);
+      logger.info("Created WordCoverageFromMahout");
+      final SfoGreedyAlgorithm sfo =
+          new SfoGreedyLazy(objectiveFunction, reporter);
+      logger.info("Created SfoGreedyAlgorithm");
       Set<Integer> selected =
           sfo.run(objectiveFunction.getAllDocIds(), selectCount);
+      logger.info("Finished running SFO");
 
       for (Integer docId : selected) {
         IntWritable outValue = new IntWritable(docId);
-        context.write(NullWritable.get(), outValue);
+        output.collect(NullWritable.get(), outValue);
       }
     }
   }
@@ -95,7 +118,7 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
   private int partitionCount;
   private int selectCount;
 
-  public WordCoverageFirstGreeDi() { }
+  public WordCoverageFirstGreeDiH104() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -104,35 +127,34 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
       return ret;
     }
 
-    Job job = Job.getInstance(getConf());
-    job.setJarByClass(WordCoverageFirstGreeDi.class);
-    job.setJobName(String.format(
+    JobConf conf = new JobConf(getConf(), WordCoverageFirstGreeDiH104.class);
+    conf.setJobName(String.format(
         "DocumentWordCoverage[%s %s]", partitionCount, selectCount));
 
-    job.getConfiguration().setInt(PARTITION_COUNT_FIELD, partitionCount);
-    job.getConfiguration().setInt(SELECT_COUNT_FIELD, selectCount);
+    conf.setInt(PARTITION_COUNT_FIELD, partitionCount);
+    conf.setInt(SELECT_COUNT_FIELD, selectCount);
 
-    job.setNumReduceTasks(partitionCount);
+    conf.setNumReduceTasks(partitionCount);
 
-    SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
-    FileOutputFormat.setOutputPath(job, new Path(outputPath));
-    FileOutputFormat.setCompressOutput(job, false);
+    SequenceFileInputFormat.addInputPath(conf, new Path(inputPath));
+    FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+    FileOutputFormat.setCompressOutput(conf, false);
 
-    job.setInputFormatClass(SequenceFileInputFormat.class);
-    job.setOutputFormatClass(TextOutputFormat.class);
+    conf.setInputFormat(SequenceFileInputFormat.class);
+    conf.setOutputFormat(TextOutputFormat.class);
 
-    job.setMapOutputKeyClass(IntWritable.class);
-    job.setMapOutputValueClass(DocumentWithVectorWritable.class);
-    job.setOutputKeyClass(NullWritable.class);
-    job.setOutputValueClass(IntWritable.class);
+    conf.setMapOutputKeyClass(IntWritable.class);
+    conf.setMapOutputValueClass(DocumentWithVectorWritable.class);
+    conf.setOutputKeyClass(NullWritable.class);
+    conf.setOutputValueClass(IntWritable.class);
 
-    job.setMapperClass(Map.class);
-    job.setReducerClass(Reduce.class);
+    conf.setMapperClass(Map.class);
+    conf.setReducerClass(Reduce.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
 
-    job.waitForCompletion(true);
+    JobClient.runJob(conf);
 
     return 0;
   }
@@ -190,6 +212,6 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new WordCoverageFirstGreeDi(), args);
+    ToolRunner.run(new WordCoverageFirstGreeDiH104(), args);
   }
 }

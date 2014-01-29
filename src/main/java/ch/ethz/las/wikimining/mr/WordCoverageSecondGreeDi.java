@@ -16,6 +16,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -57,7 +58,7 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
 
         readDocsSubset(path, fs);
       } catch (IOException | RuntimeException e) {
-        throw new RuntimeException("Error loading docs subset ids!");
+        logger.fatal("Error loading docs subset ids!", e);
       }
     }
 
@@ -75,10 +76,17 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     }
 
     private void readDocsSubset(Path path, FileSystem fs) throws IOException {
-      try (FSDataInputStream in = fs.open(path.suffix("/part-r-00000")); Scanner s = new Scanner(in)) {
-        docsSubset = new HashSet<>();
-        while (s.hasNextInt()) {
-          docsSubset.add(s.nextInt());
+      docsSubset = new HashSet<>();
+      final FileStatus[] statuses = fs.listStatus(path);
+      for (FileStatus status : statuses) {
+        if (status.isDirectory()) {
+          continue;
+        }
+        try (final FSDataInputStream in = fs.open(status.getPath());
+            final Scanner s = new Scanner(in)) {
+          while (s.hasNextInt()) {
+            docsSubset.add(s.nextInt());
+          }
         }
       }
     }
@@ -94,10 +102,11 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
       final WordCoverageFromMahout objectiveFunction =
           new WordCoverageFromMahout(values);
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
-      final int partitionCount = context.getConfiguration()
-          .getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
+      final int selectCount = context.getConfiguration()
+          .getInt(SELECT_COUNT_FIELD, DEFAULT_SELECT_COUNT);
+
       Set<Integer> selected =
-          sfo.run(objectiveFunction.getAllDocIds(), partitionCount);
+          sfo.run(objectiveFunction.getAllDocIds(), selectCount);
 
       for (Integer docId : selected) {
         IntWritable outValue = new IntWritable(docId);
@@ -106,14 +115,14 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     }
   }
 
-  private static final int DEFAULT_PARTITION_COUNT = 16;
+  private static final int DEFAULT_SELECT_COUNT = 16;
   private static final String DOCS_SUBSET_FIELD = "DocsSubsetField";
-  private static final String PARTITION_COUNT_FIELD = "PartitionCountField";
+  private static final String SELECT_COUNT_FIELD = "SelectCountField";
 
   private static final String INPUT_OPTION = "input";
   private static final String DOCS_SUBSET_OPTION = "docs";
   private static final String OUTPUT_OPTION = "output";
-  private static final String PARTITION_COUNT_OPTION = "partitions";
+  private static final String SELECT_COUNT_OPTION = "select";
 
   private static final Logger logger =
       Logger.getLogger(WordCoverageSecondGreeDi.class);
@@ -121,7 +130,7 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
   private String inputPath;
   private String docsSubsetPath;
   private String outputPath;
-  private int partitionCount;
+  private int selectCount;
 
   public WordCoverageSecondGreeDi() { }
 
@@ -134,10 +143,10 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
 
     Job job = Job.getInstance(getConf());
     job.setJarByClass(WordCoverageFirstGreeDi.class);
-    job.setJobName(String.format("DocumentWordCoverage[%s]", partitionCount));
+    job.setJobName(String.format("DocumentWordCoverage[%s]", selectCount));
 
     job.getConfiguration().set(DOCS_SUBSET_FIELD, docsSubsetPath);
-    job.getConfiguration().setInt(PARTITION_COUNT_FIELD, partitionCount);
+    job.getConfiguration().setInt(SELECT_COUNT_FIELD, selectCount);
 
     job.setNumReduceTasks(1);
 
@@ -173,7 +182,7 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles").create(OUTPUT_OPTION));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Partition count").create(PARTITION_COUNT_OPTION));
+        .withDescription("Select count").create(SELECT_COUNT_OPTION));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -196,13 +205,13 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     docsSubsetPath = cmdline.getOptionValue(DOCS_SUBSET_OPTION);
     outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
 
-    partitionCount = DEFAULT_PARTITION_COUNT;
-    if (cmdline.hasOption(PARTITION_COUNT_OPTION)) {
-      partitionCount =
-          Integer.parseInt(cmdline.getOptionValue(PARTITION_COUNT_OPTION));
-      if(partitionCount <= 0){
+    selectCount = DEFAULT_SELECT_COUNT;
+    if (cmdline.hasOption(SELECT_COUNT_OPTION)) {
+      selectCount =
+          Integer.parseInt(cmdline.getOptionValue(SELECT_COUNT_OPTION));
+      if(selectCount <= 0){
         System.err.println(
-            "Error: \"" + partitionCount + "\" has to be positive!");
+            "Error: \"" + selectCount + "\" has to be positive!");
         return -1;
       }
     }
@@ -211,7 +220,7 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     logger.info(" - input: " + inputPath);
     logger.info(" - docs: " + docsSubsetPath);
     logger.info(" - output: " + outputPath);
-    logger.info(" - patitions: " + partitionCount);
+    logger.info(" - select: " + selectCount);
 
     return 0;
   }

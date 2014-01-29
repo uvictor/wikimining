@@ -10,6 +10,8 @@ import org.apache.mahout.math.VectorWritable;
 
 /**
  * Stores a document id along with its tf-idf vectors.
+ * <p>
+ * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class DocumentWithVectorWritable implements Writable {
   private Text id;

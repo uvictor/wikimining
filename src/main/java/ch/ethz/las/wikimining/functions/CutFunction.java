@@ -10,7 +10,7 @@ import java.util.Set;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class CutFunction implements ObjectiveFunction {
-  private ArrayList<ArrayList<Integer>> graph;
+  private final ArrayList<ArrayList<Integer>> graph;
 
   public CutFunction(ArrayList<ArrayList<Integer>> theGraph) {
     this.graph = theGraph;
