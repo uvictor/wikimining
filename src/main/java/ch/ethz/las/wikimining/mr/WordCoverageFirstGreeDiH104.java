@@ -56,6 +56,11 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
   private static final Logger logger =
       Logger.getLogger(WordCoverageFirstGreeDiH104.class);
 
+  private static enum Records {
+
+    TOTAL
+  };
+
   private static class Map extends MapReduceBase implements Mapper<
       Text, VectorWritable, IntWritable, DocumentWithVectorWritable> {
 
@@ -71,6 +76,7 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
     public void map(Text key, VectorWritable value, OutputCollector<IntWritable,
         DocumentWithVectorWritable> output, Reporter reporter)
         throws IOException {
+      reporter.getCounter(Records.TOTAL).increment(1);
       final int partition = Integer.parseInt(key.toString()) % partitionCount;
       final IntWritable outKey = new IntWritable(partition);
 

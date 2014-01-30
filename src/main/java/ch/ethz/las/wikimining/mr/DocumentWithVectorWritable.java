@@ -9,7 +9,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Stores a document id along with its tf-idf vectors.
+ * Stores a document id along with its tf-idf vector in serializable format.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */

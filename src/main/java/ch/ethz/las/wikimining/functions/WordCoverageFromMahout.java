@@ -100,9 +100,9 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
     }
   }
 
-  // TODO(uvictor): consider using a non-constant word weight. All reducers load
-  // all global term frequencies.
-  private double computeWordWeight(Element term) {
+  // TODO(uvictor): consider using a non-constant word weight - all reducers
+  // load all global term frequencies.
+  protected double computeWordWeight(Element term) {
     return 1;
   }
 }

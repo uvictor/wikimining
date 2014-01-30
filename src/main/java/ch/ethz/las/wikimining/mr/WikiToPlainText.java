@@ -35,65 +35,26 @@ public class WikiToPlainText extends Configured implements Tool {
 
   private static final Logger logger = Logger.getLogger(WikiToPlainText.class);
 
-  private static enum PageTypes {
-    TOTAL, REDIRECT, DISAMBIGUATION, EMPTY, ARTICLE, STUB, NON_ARTICLE, OTHER
-  };
-
   private static class MyMapper extends
       Mapper<LongWritable, WikipediaPage, Text, Text> {
 
     @Override
     public void map(LongWritable key, WikipediaPage doc, Context context)
         throws IOException, InterruptedException {
-      context.getCounter(PageTypes.TOTAL).increment(1);
-      String id = doc.getDocid();
-      
-      if (id != null && isArticle(doc, context)) {
-        // TODO(uvictor): remove hack for Cloud9's WikipediaPage.getContent()
-        final Text docContent;
-        try {
-          docContent = new Text(doc.getContent());
-        } catch (NullPointerException e) {
-          logger.error("WikipediaPage.getContent() NullPointerExcetion", e);
-          return;
-        }
-
-        context.write(new Text(id), docContent);
-      }
-    }
-
-    public boolean isArticle(WikipediaPage doc, Context context) {
-      if (doc.isRedirect()) {
-        context.getCounter(PageTypes.REDIRECT).increment(1);
-        return false;
-      }
-      if (doc.isEmpty()) {
-        context.getCounter(PageTypes.EMPTY).increment(1);
-        return false;
-      }
-      if (doc.isDisambiguation()) {
-        context.getCounter(PageTypes.DISAMBIGUATION).increment(1);
-        return false;
+      if (!PageTypeChecker.isArticle(doc, context)) {
+        return;
       }
 
-      if (doc.isArticle()) {
-        // heuristic: potentially template or stub article
-        if (doc.getTitle().length() > 0.3 * doc.getContent().length()) {
-          context.getCounter(PageTypes.OTHER).increment(1);
-          return false;
-        }
-
-        if (doc.isStub()) {
-          context.getCounter(PageTypes.STUB).increment(1);
-        } else {
-          context.getCounter(PageTypes.ARTICLE).increment(1);
-        }
-
-        return true;
+      // TODO(uvictor): remove hack for Cloud9's WikipediaPage.getContent()
+      final Text docContent;
+      try {
+        docContent = new Text(doc.getContent());
+      } catch (NullPointerException e) {
+        logger.error("WikipediaPage.getContent() NullPointerExcetion", e);
+        return;
       }
 
-      context.getCounter(PageTypes.NON_ARTICLE).increment(1);
-      return false;
+      context.write(new Text(doc.getDocid()), docContent);
     }
   }
 
@@ -151,7 +112,7 @@ public class WikiToPlainText extends Configured implements Tool {
     }
 
     // this is the default block size
-    int blocksize = 1000000;
+    final int blocksize = 1000000;
 
     Job job = Job.getInstance(getConf());
     job.setJarByClass(WikiToPlainText.class);
@@ -180,10 +141,13 @@ public class WikiToPlainText extends Configured implements Tool {
       SequenceFileOutputFormat.setCompressOutput(job, true);
 
       if ("record".equals(compressionType)) {
-        SequenceFileOutputFormat.setOutputCompressionType(job, SequenceFile.CompressionType.RECORD);
+        SequenceFileOutputFormat
+            .setOutputCompressionType(job, SequenceFile.CompressionType.RECORD);
       } else {
-        SequenceFileOutputFormat.setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
-        job.getConfiguration().setInt("io.seqfile.compress.blocksize", blocksize);
+        SequenceFileOutputFormat
+            .setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
+        job.getConfiguration()
+            .setInt("io.seqfile.compress.blocksize", blocksize);
       }
     }
 
