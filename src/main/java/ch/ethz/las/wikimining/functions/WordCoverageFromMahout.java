@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.mr.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,14 +14,14 @@ import org.apache.mahout.math.Vector.Element;
  * Computes the word coverage as equation (1) from the paper, from a Mahout
  * index.
  * <p>
- * TODO(uvictor): use Vector.aggregate to keep the max.
+ * TODO(uvictor): use Vector.aggregate to keep the max?
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class WordCoverageFromMahout extends AbstractWordCoverage {
 
-  final List<Integer> allDocIds;
-  final Map<Integer, Vector> documents;
+  private final List<Integer> allDocIds;
+  protected final Map<Integer, Vector> documents;
 
   /**
    * Creates an object used to compute the necessary word coverage score.
@@ -67,7 +67,7 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
     for (Integer docId : docIds) {
       final Iterable<Element> terms = getTermsForDoc(docId);
       if (terms != null) {
-        computeMaxScoresForDoc(terms, maxScores);
+        computeMaxScoresForDoc(terms, -1, maxScores);
       }
     }
 
@@ -79,12 +79,12 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
     return sum;
   }
 
-  private Iterable<Element> getTermsForDoc(int docId) {
+  protected Iterable<Element> getTermsForDoc(int docId) {
     return documents.get(docId).nonZeroes();
   }
 
-  private void computeMaxScoresForDoc(
-      Iterable<Element> terms, Map<Integer, Score> maxScores) {
+  protected void computeMaxScoresForDoc(
+      Iterable<Element> terms, int date, Map<Integer, Score> maxScores) {
     for (Element term : terms) {
       final Integer word = term.index();
       final double tfIdf = term.get();
@@ -92,7 +92,7 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
       final Score score = maxScores.get(word);
       if (score == null) {
         maxScores
-            .put(word, new Score(computeWordWeight(term), tfIdf));
+            .put(word, new Score(computeWordWeight(term, date), tfIdf));
       } else if (tfIdf > score.getMaxTfIdf()) {
         maxScores
             .put(word, new Score(score.getWordWeight(), tfIdf));
@@ -102,7 +102,7 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
 
   // TODO(uvictor): consider using a non-constant word weight - all reducers
   // load all global term frequencies.
-  protected double computeWordWeight(Element term) {
+  protected double computeWordWeight(Element term, int date) {
     return 1;
   }
 }

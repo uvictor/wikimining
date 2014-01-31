@@ -1,5 +1,7 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.influence;
 
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,7 +34,7 @@ import org.apache.mahout.math.VectorWritable;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class NovelWordSpread extends Configured implements Tool {
+public class TfIdfWordSpread extends Configured implements Tool {
 
   private static enum Records {
 
@@ -48,19 +50,14 @@ public class NovelWordSpread extends Configured implements Tool {
     @Override
     public void setup(Context context) {
       try {
-        Path datesPath = new Path(context.getConfiguration().get(DATES_FIELD));
+        Path datesPath = new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
         logger.info("Loading doc dates: " + datesPath);
 
         FileSystem fs = FileSystem.get(context.getConfiguration());
-        if (!fs.exists(datesPath)) {
-          throw new RuntimeException(datesPath + " does not exist!");
-        }
-
-        final DocDatesReader datesReader =
-            new DocDatesReader(datesPath, fs, context.getConfiguration());
-        datesReader.read();
-        docDates = datesReader.getDocDates();
-      } catch (IOException | RuntimeException e) {
+        final IntegerSequenceFileReader datesReader = new IntegerSequenceFileReader(
+            datesPath, fs, context.getConfiguration());
+        docDates = datesReader.read();
+      } catch (IOException e) {
         logger.fatal("Error loading doc dates!", e);
       }
       logger.info("Loaded " + docDates.size() + " doc dates.");
@@ -96,20 +93,14 @@ public class NovelWordSpread extends Configured implements Tool {
     }
   }
 
-  private static final String DATES_FIELD = "DatesField";
-
-  private static final String INPUT_OPTION = "input";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String DATES_OPTION = "dates";
-
   private static final Logger logger =
-      Logger.getLogger(NovelWordSpread.class);
+      Logger.getLogger(TfIdfWordSpread.class);
 
   private String inputPath;
   private String outputPath;
   private String datesPath;
 
-  public NovelWordSpread() { }
+  public TfIdfWordSpread() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -119,10 +110,10 @@ public class NovelWordSpread extends Configured implements Tool {
     }
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(NovelWordSpread.class);
-    job.setJobName("NovelWordSpread");
+    job.setJarByClass(TfIdfWordSpread.class);
+    job.setJobName("Influence-TfidfWordSpread");
 
-    job.getConfiguration().set(DATES_FIELD, datesPath);
+    job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
 
     final int blocksize = 1000000;
     SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
@@ -154,11 +145,11 @@ public class NovelWordSpread extends Configured implements Tool {
   private int parseArgs(String[] args) {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Tfidf vectors").create(INPUT_OPTION));
+        .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Near documents").create(OUTPUT_OPTION));
+        .withDescription("Near documents").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Document dates").create(DATES_OPTION));
+        .withDescription("Document dates").create(Fields.DOC_DATES.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -169,17 +160,17 @@ public class NovelWordSpread extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)
-        || !cmdline.hasOption(DATES_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.DOC_DATES.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
-    datesPath = cmdline.getOptionValue(DATES_OPTION);
+    inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
@@ -190,6 +181,6 @@ public class NovelWordSpread extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new NovelWordSpread(), args);
+    ToolRunner.run(new TfIdfWordSpread(), args);
   }
 }

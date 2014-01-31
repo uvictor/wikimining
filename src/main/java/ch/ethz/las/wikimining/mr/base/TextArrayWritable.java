@@ -1,4 +1,4 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.base;
 
 import org.apache.hadoop.io.Text;
 

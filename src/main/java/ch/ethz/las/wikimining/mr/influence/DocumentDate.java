@@ -1,5 +1,7 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.influence;
 
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.utils.PageTypeChecker;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPageInputFormat;
 import java.io.IOException;
@@ -35,13 +37,9 @@ import org.apache.tools.ant.filters.StringInputStream;
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class NovelDocumentDate extends Configured implements Tool {
+public class DocumentDate extends Configured implements Tool {
 
-  private static final String INPUT_OPTION = "input";
-  private static final String OUTPUT_OPTION = "output";
-
-  private static final Logger logger =
-      Logger.getLogger(NovelDocumentDate.class);
+  private static final Logger logger = Logger.getLogger(DocumentDate.class);
 
   private static class MyMapper extends
       Mapper<LongWritable, WikipediaPage, IntWritable, IntWritable> {
@@ -92,9 +90,9 @@ public class NovelDocumentDate extends Configured implements Tool {
   public int run(String[] args) throws Exception {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("XML dump file").create(INPUT_OPTION));
+        .withDescription("XML dump file").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("output location").create(OUTPUT_OPTION));
+        .withDescription("output location").create(Fields.INPUT.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -105,21 +103,20 @@ public class NovelDocumentDate extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    String inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    String outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
+    String inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    String outputPath = cmdline.getOptionValue(Fields.INPUT.get());
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(NovelDocumentDate.class);
-    job.setJobName(
-        String.format("NovelDocumentDate[%s: %s, %s: %s]",
-        INPUT_OPTION, inputPath, OUTPUT_OPTION, outputPath));
+    job.setJarByClass(DocumentDate.class);
+    job.setJobName(String.format("Influence-Document Date[%s: %s, %s: %s]",
+        Fields.INPUT.get(), inputPath, Fields.INPUT.get(), outputPath));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input path: " + inputPath);
@@ -145,10 +142,10 @@ public class NovelDocumentDate extends Configured implements Tool {
     return 0;
   }
 
-  public NovelDocumentDate() {
+  public DocumentDate() {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new NovelDocumentDate(), args);
+    ToolRunner.run(new DocumentDate(), args);
   }
 }

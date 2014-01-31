@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.utils;
 
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.Mapper;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class PageTypeChecker {
-  public static enum PageTypes {
+  private static enum PageTypes {
     TOTAL, REDIRECT, DISAMBIGUATION, EMPTY, ARTICLE, STUB, NON_ARTICLE, OTHER
   };
 

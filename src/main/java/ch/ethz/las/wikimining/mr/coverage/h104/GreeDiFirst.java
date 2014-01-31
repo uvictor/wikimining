@@ -1,6 +1,9 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.coverage.h104;
 
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
@@ -41,20 +44,10 @@ import org.apache.mahout.math.VectorWritable;
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
-
-  private static final int DEFAULT_PARTITION_COUNT = 400;
-  private static final String PARTITION_COUNT_FIELD = "PartitionCountField";
-  private static final int DEFAULT_SELECT_COUNT = 10;
-  private static final String SELECT_COUNT_FIELD = "SelectCountField";
-
-  private static final String INPUT_OPTION = "input";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String PARTITION_COUNT_OPTION = "partitions";
-  private static final String SELECT_COUNT_OPTION = "select";
+public class GreeDiFirst extends Configured implements Tool {
 
   private static final Logger logger =
-      Logger.getLogger(WordCoverageFirstGreeDiH104.class);
+      Logger.getLogger(GreeDiFirst.class);
 
   private static enum Records {
 
@@ -69,7 +62,7 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
     @Override
     public void configure(JobConf job) {
       partitionCount =
-          job.getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
+          job.getInt(Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
     }
 
     @Override
@@ -94,7 +87,7 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
 
     @Override
     public void configure(JobConf job) {
-      selectCount = job.getInt(SELECT_COUNT_FIELD, DEFAULT_SELECT_COUNT);
+      selectCount = job.getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
     }
 
     @Override
@@ -124,7 +117,7 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
   private int partitionCount;
   private int selectCount;
 
-  public WordCoverageFirstGreeDiH104() { }
+  public GreeDiFirst() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -133,12 +126,12 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
       return ret;
     }
 
-    JobConf conf = new JobConf(getConf(), WordCoverageFirstGreeDiH104.class);
+    JobConf conf = new JobConf(getConf(), GreeDiFirst.class);
     conf.setJobName(String.format(
-        "DocumentWordCoverage[%s %s]", partitionCount, selectCount));
+        "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
 
-    conf.setInt(PARTITION_COUNT_FIELD, partitionCount);
-    conf.setInt(SELECT_COUNT_FIELD, selectCount);
+    conf.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
+    conf.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
     conf.setNumReduceTasks(partitionCount);
 
@@ -169,13 +162,13 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
   private int parseArgs(String[] args) {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Tfidf vectors").create(INPUT_OPTION));
+        .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected articles").create(OUTPUT_OPTION));
+        .withDescription("Selected articles").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Partition count").create(PARTITION_COUNT_OPTION));
+        .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Select count").create(SELECT_COUNT_OPTION));
+        .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -186,27 +179,27 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
+    inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
-    partitionCount = DEFAULT_PARTITION_COUNT;
-    if (cmdline.hasOption(PARTITION_COUNT_OPTION)) {
+    partitionCount = Defaults.PARTITION_COUNT.get();
+    if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
       partitionCount =
-          Integer.parseInt(cmdline.getOptionValue(PARTITION_COUNT_OPTION));
+          Integer.parseInt(cmdline.getOptionValue(Fields.PARTITION_COUNT.get()));
       if(partitionCount <= 0){
         System.err.println(
             "Error: \"" + partitionCount + "\" has to be positive!");
         return -1;
       }
     }
-    selectCount = Integer.parseInt(cmdline.getOptionValue(SELECT_COUNT_OPTION));
+    selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
@@ -218,6 +211,6 @@ public class WordCoverageFirstGreeDiH104 extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new WordCoverageFirstGreeDiH104(), args);
+    ToolRunner.run(new GreeDiFirst(), args);
   }
 }

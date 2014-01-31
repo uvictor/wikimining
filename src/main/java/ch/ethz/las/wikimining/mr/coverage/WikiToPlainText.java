@@ -1,5 +1,7 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.coverage;
 
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.utils.PageTypeChecker;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPageInputFormat;
 import java.io.IOException;
@@ -58,23 +60,18 @@ public class WikiToPlainText extends Configured implements Tool {
     }
   }
 
-  private static final String INPUT_OPTION = "input";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String COMPRESSION_TYPE_OPTION = "compression_type";
-  private static final String LANGUAGE_OPTION = "wiki_language";
-
   @SuppressWarnings("static-access")
   @Override
   public int run(String[] args) throws Exception {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("XML dump file").create(INPUT_OPTION));
+        .withDescription("XML dump file").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("output location").create(OUTPUT_OPTION));
+        .withDescription("output location").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("block|record|none").hasArg()
-        .withDescription("compression type").create(COMPRESSION_TYPE_OPTION));
+        .withDescription("compression type").create(Fields.COMPRESSION.get()));
     options.addOption(OptionBuilder.withArgName("en|sv|de").hasArg()
-        .withDescription("two-letter language code").create(LANGUAGE_OPTION));
+        .withDescription("two-letter language code").create(Fields.LANGUAGE.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -85,17 +82,17 @@ public class WikiToPlainText extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)
-        || !cmdline.hasOption(COMPRESSION_TYPE_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())
+        || !cmdline.hasOption(Fields.COMPRESSION.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    String inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    String outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
-    String compressionType = cmdline.getOptionValue(COMPRESSION_TYPE_OPTION);
+    String inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    String outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
+    String compressionType = cmdline.getOptionValue(Fields.COMPRESSION.get());
 
     if (!"block".equals(compressionType) && !"record".equals(compressionType) && !"none".equals(compressionType)) {
       System.err.println("Error: \"" + compressionType + "\" unknown compression type!");
@@ -103,8 +100,8 @@ public class WikiToPlainText extends Configured implements Tool {
     }
 
     String language = null;
-    if (cmdline.hasOption(LANGUAGE_OPTION)) {
-      language = cmdline.getOptionValue(LANGUAGE_OPTION);
+    if (cmdline.hasOption(Fields.LANGUAGE.get())) {
+      language = cmdline.getOptionValue(Fields.LANGUAGE.get());
       if (language.length() != 2) {
         System.err.println("Error: \"" + language + "\" unknown language!");
         return -1;
@@ -116,9 +113,10 @@ public class WikiToPlainText extends Configured implements Tool {
 
     Job job = Job.getInstance(getConf());
     job.setJarByClass(WikiToPlainText.class);
-    job.setJobName(String.format("RepackWikipedia[%s: %s, %s: %s, %s: %s, %s: %s]",
-        INPUT_OPTION, inputPath, OUTPUT_OPTION, outputPath, COMPRESSION_TYPE_OPTION,
-        compressionType, LANGUAGE_OPTION, language));
+    job.setJobName(String.format(
+        "WikiToPlainText[%s: %s, %s: %s, %s: %s, %s: %s]",
+        Fields.INPUT.get(), inputPath, Fields.OUTPUT.get(), outputPath,
+        Fields.COMPRESSION.get(), compressionType, Fields.LANGUAGE.get(), language));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - XML dump file: " + inputPath);

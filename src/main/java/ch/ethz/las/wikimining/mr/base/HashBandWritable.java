@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.base;
 
 import java.io.DataInput;
 import java.io.DataOutput;

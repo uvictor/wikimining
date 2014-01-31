@@ -1,5 +1,12 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.influence;
 
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVector;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.SequenceFileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +18,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -24,7 +29,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -43,7 +47,7 @@ import org.apache.mahout.math.random.RandomProjector;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class NovelTfIdf extends Configured implements Tool {
+public class TfIdfNovelty extends Configured implements Tool {
 
   private static enum Records {
 
@@ -58,11 +62,11 @@ public class NovelTfIdf extends Configured implements Tool {
     @Override
     public void setup(Context context) {
       final int bandsCount = context.getConfiguration()
-          .getInt(BANDS_FIELD, DEFAULT_BANDS);
+          .getInt(Fields.BANDS.get(), Defaults.BANDS.get());
       final int rowsCount = context.getConfiguration()
-          .getInt(ROWS_FIELD, DEFAULT_ROWS);
+          .getInt(Fields.ROWS.get(), Defaults.ROWS.get());
       final int dimensions = context.getConfiguration()
-          .getInt(DIMENSIONS_FIELD, DEFAULT_DIMENSIONS);
+          .getInt(Fields.DIMENSIONS.get(), Defaults.DIMENSIONS.get());
 
       // TODO(uvictor): Important!: use the same basisMatrix for all tasks !!
       basisMatrix = RandomProjector
@@ -74,9 +78,9 @@ public class NovelTfIdf extends Configured implements Tool {
         throws IOException, InterruptedException {
       context.getCounter(Records.TOTAL).increment(1);
       final int bandCount = context.getConfiguration()
-          .getInt(BANDS_FIELD, DEFAULT_BANDS);
+          .getInt(Fields.BANDS.get(), Defaults.BANDS.get());
       final int rowCount = context.getConfiguration()
-          .getInt(ROWS_FIELD, DEFAULT_ROWS);
+          .getInt(Fields.ROWS.get(), Defaults.ROWS.get());
       final Vector vector = value.get();
 
       final Vector rowHashes =
@@ -117,16 +121,14 @@ public class NovelTfIdf extends Configured implements Tool {
       parsedDocIds = new HashSet<>();
 
       try {
-        Path datesPath = new Path(context.getConfiguration().get(DATES_FIELD));
+        Path datesPath = new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
         logger.info("Loading doc dates: " + datesPath);
 
         FileSystem fs = FileSystem.get(context.getConfiguration());
-        if (!fs.exists(datesPath)) {
-          throw new RuntimeException(datesPath + " does not exist!");
-        }
-
-        readDocDates(datesPath, fs, context.getConfiguration());
-      } catch (IOException | RuntimeException e) {
+        final SequenceFileReader datesReader = new IntegerSequenceFileReader(
+            datesPath, fs, context.getConfiguration());
+        docDates = datesReader.read();
+      } catch (IOException e) {
         logger.fatal("Error loading doc dates!", e);
       }
       logger.info("Loaded " + docDates.size() + " doc dates.");
@@ -188,50 +190,9 @@ public class NovelTfIdf extends Configured implements Tool {
         }
       }
     }
-
-    private void readDocDates(Path path, FileSystem fs, Configuration config)
-        throws IOException {
-      docDates = new HashMap<>();
-      final FileStatus[] statuses = fs.listStatus(path);
-      for (FileStatus status : statuses) {
-        if (status.isDirectory()) {
-          continue;
-        }
-        if ("_SUCCESS".equals(status.getPath().getName())) {
-          continue;
-        }
-
-        try (SequenceFile.Reader reader =
-            new SequenceFile.Reader(fs, status.getPath(), config)) {
-          IntWritable key = (IntWritable)
-            ReflectionUtils.newInstance(reader.getKeyClass(), config);
-          IntWritable value = (IntWritable)
-            ReflectionUtils.newInstance(reader.getValueClass(), config);
-          while (reader.next(key, value)) {
-            docDates.put(key.get(), value.get());
-          }
-        }
-      }
-    }
   }
 
-  private static final int DEFAULT_DIMENSIONS = -1;
-  private static final String DIMENSIONS_FIELD = "DimensionsField";
-  private static final String DATES_FIELD = "DatesField";
-  private static final int DEFAULT_BANDS = 9;
-  private static final String BANDS_FIELD = "BandsField";
-  private static final int DEFAULT_ROWS = 13;
-  private static final String ROWS_FIELD = "RowsField";
-
-  private static final String INPUT_OPTION = "input";
-  private static final String DIMENSIONS_OPTION = "dimensions";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String DATES_OPTION = "dates";
-  private static final String BANDS_OPTION = "bands";
-  private static final String ROWS_OPTION = "rows";
-
-  private static final Logger logger =
-      Logger.getLogger(NovelTfIdf.class);
+  private static final Logger logger = Logger.getLogger(TfIdfNovelty.class);
 
   private String inputPath;
   private String outputPath;
@@ -240,7 +201,7 @@ public class NovelTfIdf extends Configured implements Tool {
   private int bands;
   private int rows;
 
-  public NovelTfIdf() { }
+  public TfIdfNovelty() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -250,17 +211,17 @@ public class NovelTfIdf extends Configured implements Tool {
     }
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(NovelTfIdf.class);
-    job.setJobName("NovelTfIdf");
+    job.setJarByClass(TfIdfNovelty.class);
+    job.setJobName("Influence-TfIdfNovelty");
 
-    job.getConfiguration().setInt(DIMENSIONS_FIELD, dimensions);
+    job.getConfiguration().setInt(Fields.DIMENSIONS.get(), dimensions);
     if (bands > 0) {
-      job.getConfiguration().setInt(BANDS_FIELD, bands);
+      job.getConfiguration().setInt(Fields.BANDS.get(), bands);
     }
     if (rows > 0) {
-      job.getConfiguration().setInt(ROWS_FIELD, rows);
+      job.getConfiguration().setInt(Fields.ROWS.get(), rows);
     }
-    job.getConfiguration().set(DATES_FIELD, datesPath);
+    job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
 
     final int blocksize = 1000000;
     SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
@@ -292,17 +253,17 @@ public class NovelTfIdf extends Configured implements Tool {
   private int parseArgs(String[] args) {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Tfidf vectors").create(INPUT_OPTION));
+        .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Vectors' length").create(DIMENSIONS_OPTION));
+        .withDescription("Vectors' length").create(Fields.DIMENSIONS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Near documents").create(OUTPUT_OPTION));
+        .withDescription("Near documents").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Document dates").create(DATES_OPTION));
+        .withDescription("Document dates").create(Fields.DOC_DATES.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Number of bands").create(BANDS_OPTION));
+        .withDescription("Number of bands").create(Fields.BANDS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Number of rows").create(ROWS_OPTION));
+        .withDescription("Number of rows").create(Fields.ROWS.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -313,27 +274,27 @@ public class NovelTfIdf extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)
-        || !cmdline.hasOption(DATES_OPTION)
-        || !cmdline.hasOption(DIMENSIONS_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.DOC_DATES.get())
+        || !cmdline.hasOption(Fields.DIMENSIONS.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
-    datesPath = cmdline.getOptionValue(DATES_OPTION);
-    dimensions = Integer.parseInt(cmdline.getOptionValue(DIMENSIONS_OPTION));
+    inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
+    dimensions = Integer.parseInt(cmdline.getOptionValue(Fields.DIMENSIONS.get()));
 
     bands = -1;
-    if (cmdline.hasOption(BANDS_OPTION)) {
-      bands = Integer.parseInt(cmdline.getOptionValue(BANDS_OPTION));
+    if (cmdline.hasOption(Fields.BANDS.get())) {
+      bands = Integer.parseInt(cmdline.getOptionValue(Fields.BANDS.get()));
     }
     rows = -1;
-    if (cmdline.hasOption(ROWS_OPTION)) {
-      rows = Integer.parseInt(cmdline.getOptionValue(ROWS_OPTION));
+    if (cmdline.hasOption(Fields.ROWS.get())) {
+      rows = Integer.parseInt(cmdline.getOptionValue(Fields.ROWS.get()));
     }
 
     logger.info("Tool name: " + this.getClass().getName());
@@ -348,6 +309,6 @@ public class NovelTfIdf extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new NovelTfIdf(), args);
+    ToolRunner.run(new TfIdfNovelty(), args);
   }
 }

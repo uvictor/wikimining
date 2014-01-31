@@ -1,6 +1,9 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.coverage;
 
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
@@ -38,7 +41,7 @@ import org.apache.mahout.math.VectorWritable;
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageSecondGreeDi extends Configured implements Tool {
+public class GreeDiSecond extends Configured implements Tool {
 
   private static class Map extends
       Mapper<Text, VectorWritable, NullWritable, DocumentWithVectorWritable> {
@@ -48,7 +51,7 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     @Override
     public void setup(Context context) {
       try {
-        Path path = new Path(context.getConfiguration().get(DOCS_SUBSET_FIELD));
+        Path path = new Path(context.getConfiguration().get(Fields.DOCS_SUBSET.get()));
         logger.info("Loading docs subset: " + path);
 
         FileSystem fs = FileSystem.get(context.getConfiguration());
@@ -103,7 +106,7 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
           new WordCoverageFromMahout(values);
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
       final int selectCount = context.getConfiguration()
-          .getInt(SELECT_COUNT_FIELD, DEFAULT_SELECT_COUNT);
+          .getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
 
       Set<Integer> selected =
           sfo.run(objectiveFunction.getAllDocIds(), selectCount);
@@ -115,24 +118,14 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     }
   }
 
-  private static final int DEFAULT_SELECT_COUNT = 16;
-  private static final String DOCS_SUBSET_FIELD = "DocsSubsetField";
-  private static final String SELECT_COUNT_FIELD = "SelectCountField";
-
-  private static final String INPUT_OPTION = "input";
-  private static final String DOCS_SUBSET_OPTION = "docs";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String SELECT_COUNT_OPTION = "select";
-
-  private static final Logger logger =
-      Logger.getLogger(WordCoverageSecondGreeDi.class);
+  private static final Logger logger = Logger.getLogger(GreeDiSecond.class);
 
   private String inputPath;
   private String docsSubsetPath;
   private String outputPath;
   private int selectCount;
 
-  public WordCoverageSecondGreeDi() { }
+  public GreeDiSecond() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -142,11 +135,11 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
     }
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(WordCoverageFirstGreeDi.class);
-    job.setJobName(String.format("DocumentWordCoverage[%s]", selectCount));
+    job.setJarByClass(GreeDiFirst.class);
+    job.setJobName(String.format("Coverage-GreeDiSecond[%s]", selectCount));
 
-    job.getConfiguration().set(DOCS_SUBSET_FIELD, docsSubsetPath);
-    job.getConfiguration().setInt(SELECT_COUNT_FIELD, selectCount);
+    job.getConfiguration().set(Fields.DOCS_SUBSET.get(), docsSubsetPath);
+    job.getConfiguration().setInt(Fields.SELECT_COUNT.get(), selectCount);
 
     job.setNumReduceTasks(1);
 
@@ -176,13 +169,13 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
   private int parseArgs(String[] args) {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Tfidf vectors").create(INPUT_OPTION));
+        .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected docs subset").create(DOCS_SUBSET_OPTION));
+        .withDescription("Selected docs subset").create(Fields.DOCS_SUBSET.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected articles").create(OUTPUT_OPTION));
+        .withDescription("Selected articles").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Select count").create(SELECT_COUNT_OPTION));
+        .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -193,22 +186,22 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)
-        || !cmdline.hasOption(DOCS_SUBSET_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())
+        || !cmdline.hasOption(Fields.DOCS_SUBSET.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    docsSubsetPath = cmdline.getOptionValue(DOCS_SUBSET_OPTION);
-    outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
+    inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    docsSubsetPath = cmdline.getOptionValue(Fields.DOCS_SUBSET.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
-    selectCount = DEFAULT_SELECT_COUNT;
-    if (cmdline.hasOption(SELECT_COUNT_OPTION)) {
+    selectCount = Defaults.SELECT_COUNT.get();
+    if (cmdline.hasOption(Fields.SELECT_COUNT.get())) {
       selectCount =
-          Integer.parseInt(cmdline.getOptionValue(SELECT_COUNT_OPTION));
+          Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
       if(selectCount <= 0){
         System.err.println(
             "Error: \"" + selectCount + "\" has to be positive!");
@@ -226,6 +219,6 @@ public class WordCoverageSecondGreeDi extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new WordCoverageSecondGreeDi(), args);
+    ToolRunner.run(new GreeDiSecond(), args);
   }
 }

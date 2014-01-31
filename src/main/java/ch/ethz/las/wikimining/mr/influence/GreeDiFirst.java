@@ -1,9 +1,15 @@
-package ch.ethz.las.wikimining.mr;
+package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
+import ch.ethz.las.wikimining.functions.NovelFromMahout;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.VectorSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -27,28 +33,19 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
+import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Computes the word coverage as equation (1) from the paper, from a Mahout
- * index, using MapReduce and the GreeDi protocol. First pass.
+ * Computes the influence of a document as equation (5) from the paper,
+ * from a novelty document index and a yearly word spread index, using MapReduce
+ * and the GreeDi protocol. First pass.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageFirstGreeDi extends Configured implements Tool {
+public class GreeDiFirst extends Configured implements Tool {
 
-  private static final int DEFAULT_PARTITION_COUNT = 400;
-  private static final String PARTITION_COUNT_FIELD = "PartitionCountField";
-  private static final int DEFAULT_SELECT_COUNT = 10;
-  private static final String SELECT_COUNT_FIELD = "SelectCountField";
-
-  private static final String INPUT_OPTION = "input";
-  private static final String OUTPUT_OPTION = "output";
-  private static final String PARTITION_COUNT_OPTION = "partitions";
-  private static final String SELECT_COUNT_OPTION = "select";
-
-  private static final Logger logger =
-      Logger.getLogger(WordCoverageFirstGreeDi.class);
+  private static final Logger logger = Logger.getLogger(GreeDiFirst.class);
 
   private static class Map extends
       Mapper<Text, VectorWritable, IntWritable, DocumentWithVectorWritable> {
@@ -57,7 +54,7 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
     public void map(Text key, VectorWritable value, Context context)
         throws IOException, InterruptedException {
       final int partitionCount = context.getConfiguration()
-          .getInt(PARTITION_COUNT_FIELD, DEFAULT_PARTITION_COUNT);
+          .getInt(Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
       final int partition = Integer.parseInt(key.toString()) % partitionCount;
       final IntWritable outKey = new IntWritable(partition);
 
@@ -71,15 +68,43 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
   private static class Reduce extends Reducer<
       IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
 
+    private HashMap<Integer, Integer> docDates;
+    private HashMap<Integer, Vector> wordSpread;
+
+    @Override
+    public void setup(Context context) {
+      try {
+        final FileSystem fs = FileSystem.get(context.getConfiguration());
+
+        final Path datesPath =
+            new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
+        final IntegerSequenceFileReader datesReader =
+            new IntegerSequenceFileReader(
+                datesPath, fs, context.getConfiguration());
+        docDates = datesReader.read();
+
+        final Path wordSpreadPath =
+            new Path(context.getConfiguration().get(Fields.WORD_SPREAD.get()));
+        final VectorSequenceFileReader wordSpreadReader =
+            new VectorSequenceFileReader(
+                wordSpreadPath, fs, context.getConfiguration());
+        wordSpread = wordSpreadReader.read();
+      } catch (IOException e) {
+        logger.fatal("Error loading doc dates!", e);
+      }
+    }
+
+    // TODO(uvictor): change the SFO and the objective function !!
     @Override
     public void reduce(IntWritable key,
         Iterable<DocumentWithVectorWritable> values, Context context)
         throws IOException, InterruptedException {
-      final WordCoverageFromMahout objectiveFunction =
-          new WordCoverageFromMahout(values);
+      final NovelFromMahout objectiveFunction =
+          new NovelFromMahout(values, docDates, wordSpread);
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
       final int selectCount = context.getConfiguration()
-          .getInt(SELECT_COUNT_FIELD, DEFAULT_SELECT_COUNT);
+          .getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
+
       Set<Integer> selected =
           sfo.run(objectiveFunction.getAllDocIds(), selectCount);
 
@@ -92,10 +117,12 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
 
   private String inputPath;
   private String outputPath;
+  private String datesPath;
+  private String wordSpreadPath;
   private int partitionCount;
   private int selectCount;
 
-  public WordCoverageFirstGreeDi() { }
+  public GreeDiFirst() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -105,12 +132,14 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
     }
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(WordCoverageFirstGreeDi.class);
+    job.setJarByClass(GreeDiFirst.class);
     job.setJobName(String.format(
-        "DocumentWordCoverage[%s %s]", partitionCount, selectCount));
+        "Influence-GreeDiFirst[%s %s]", partitionCount, selectCount));
 
-    job.getConfiguration().setInt(PARTITION_COUNT_FIELD, partitionCount);
-    job.getConfiguration().setInt(SELECT_COUNT_FIELD, selectCount);
+    job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
+    job.getConfiguration().set(Fields.WORD_SPREAD.get(), wordSpreadPath);
+    job.getConfiguration().setInt(Fields.PARTITION_COUNT.get(), partitionCount);
+    job.getConfiguration().setInt(Fields.SELECT_COUNT.get(), selectCount);
 
     job.setNumReduceTasks(partitionCount);
 
@@ -141,13 +170,19 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
   private int parseArgs(String[] args) {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Tfidf vectors").create(INPUT_OPTION));
+        .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected articles").create(OUTPUT_OPTION));
+        .withDescription("Selected articles").create(Fields.INPUT.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Document dates").create(Fields.DOC_DATES.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Word spread yearly matrix")
+        .create(Fields.WORD_SPREAD.get()));
+
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Partition count").create(PARTITION_COUNT_OPTION));
+        .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Select count").create(SELECT_COUNT_OPTION));
+        .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -158,31 +193,37 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(INPUT_OPTION) || !cmdline.hasOption(OUTPUT_OPTION)) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.DOC_DATES.get())
+        || !cmdline.hasOption(Fields.WORD_SPREAD.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
       return -1;
     }
 
-    inputPath = cmdline.getOptionValue(INPUT_OPTION);
-    outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
+    inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
+    wordSpreadPath = cmdline.getOptionValue(Fields.WORD_SPREAD.get());
 
-    partitionCount = DEFAULT_PARTITION_COUNT;
-    if (cmdline.hasOption(PARTITION_COUNT_OPTION)) {
+    partitionCount = Defaults.PARTITION_COUNT.get();
+    if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
       partitionCount =
-          Integer.parseInt(cmdline.getOptionValue(PARTITION_COUNT_OPTION));
+          Integer.parseInt(cmdline.getOptionValue(Fields.PARTITION_COUNT.get()));
       if(partitionCount <= 0){
         System.err.println(
             "Error: \"" + partitionCount + "\" has to be positive!");
         return -1;
       }
     }
-    selectCount = Integer.parseInt(cmdline.getOptionValue(SELECT_COUNT_OPTION));
+    selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
     logger.info(" - output: " + outputPath);
+    logger.info(" - dates: " + datesPath);
+    logger.info(" - spread: " + wordSpreadPath);
     logger.info(" - partitions: " + partitionCount);
     logger.info(" - select: " + selectCount);
 
@@ -190,6 +231,6 @@ public class WordCoverageFirstGreeDi extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new WordCoverageFirstGreeDi(), args);
+    ToolRunner.run(new GreeDiFirst(), args);
   }
 }
