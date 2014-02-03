@@ -109,7 +109,7 @@ public class WikiToPlainText extends Configured implements Tool {
     }
 
     // this is the default block size
-    final int blocksize = 1000000;
+    final int defaultBlockSize = 1000000;
 
     Job job = Job.getInstance(getConf());
     job.setJarByClass(WikiToPlainText.class);
@@ -125,7 +125,7 @@ public class WikiToPlainText extends Configured implements Tool {
     logger.info(" - language: " + language);
 
     if ("block".equals(compressionType)) {
-      logger.info(" - block size: " + blocksize);
+      logger.info(" - block size: " + defaultBlockSize);
     }
 
     job.setNumReduceTasks(0);
@@ -145,7 +145,7 @@ public class WikiToPlainText extends Configured implements Tool {
         SequenceFileOutputFormat
             .setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
         job.getConfiguration()
-            .setInt("io.seqfile.compress.blocksize", blocksize);
+            .setInt("io.seqfile.compress.blocksize", defaultBlockSize);
       }
     }
 

@@ -50,12 +50,14 @@ public class TfIdfWordSpread extends Configured implements Tool {
     @Override
     public void setup(Context context) {
       try {
-        Path datesPath = new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
+        Path datesPath =
+            new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
         logger.info("Loading doc dates: " + datesPath);
 
         FileSystem fs = FileSystem.get(context.getConfiguration());
-        final IntegerSequenceFileReader datesReader = new IntegerSequenceFileReader(
-            datesPath, fs, context.getConfiguration());
+        final IntegerSequenceFileReader datesReader =
+            new IntegerSequenceFileReader(
+                datesPath, fs, context.getConfiguration());
         docDates = datesReader.read();
       } catch (IOException e) {
         logger.fatal("Error loading doc dates!", e);

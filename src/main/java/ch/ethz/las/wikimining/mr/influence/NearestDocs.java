@@ -17,6 +17,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -144,6 +145,11 @@ public class NearestDocs extends Configured implements Tool {
 
     SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
     SequenceFileOutputFormat.setOutputPath(job, new Path(outputPath));
+    SequenceFileOutputFormat
+        .setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
+    final int defaultBlockSize = 1000000;
+    job.getConfiguration()
+        .setInt("io.seqfile.compress.blocksize", defaultBlockSize);
 
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);

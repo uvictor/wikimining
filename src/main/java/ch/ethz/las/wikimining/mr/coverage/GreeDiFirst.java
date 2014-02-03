@@ -81,7 +81,6 @@ public class GreeDiFirst extends Configured implements Tool {
 
     SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
     FileOutputFormat.setOutputPath(job, new Path(outputPath));
-    FileOutputFormat.setCompressOutput(job, false);
 
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);

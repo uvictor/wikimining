@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -64,24 +65,24 @@ public class DocumentDate extends Configured implements Tool {
     }
 
     private Calendar getPageTimeStamp(String xml) throws XMLStreamException {
-    String timestamp = null;
-    XMLInputFactory factory = XMLInputFactory.newInstance();
-    XMLStreamReader reader =
-        factory.createXMLStreamReader(new StringInputStream(xml));
+      String timestamp = null;
+      XMLInputFactory factory = XMLInputFactory.newInstance();
+      XMLStreamReader reader =
+          factory.createXMLStreamReader(new StringInputStream(xml));
 
-    while(reader.hasNext()){
-      int event = reader.next();
+      while(reader.hasNext()){
+        int event = reader.next();
 
-      if (event == XMLStreamConstants.CHARACTERS) {
-        timestamp = reader.getText();
-      } else if (event == XMLStreamConstants.END_ELEMENT) {
-        if ("timestamp".equals(reader.getLocalName())) {
-          break;
+        if (event == XMLStreamConstants.CHARACTERS) {
+          timestamp = reader.getText();
+        } else if (event == XMLStreamConstants.END_ELEMENT) {
+          if ("timestamp".equals(reader.getLocalName())) {
+            break;
+          }
         }
       }
-    }
 
-    return DatatypeConverter.parseDateTime(timestamp);
+      return DatatypeConverter.parseDateTime(timestamp);
     }
   }
 
@@ -127,9 +128,15 @@ public class DocumentDate extends Configured implements Tool {
 
     SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
     SequenceFileOutputFormat.setOutputPath(job, new Path(outputPath));
+    SequenceFileOutputFormat
+        .setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
+    final int defaultBlockSize = 1000000;
+    job.getConfiguration()
+        .setInt("io.seqfile.compress.blocksize", defaultBlockSize);
 
     job.setInputFormatClass(WikipediaPageInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(IntWritable.class);
 
