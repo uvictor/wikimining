@@ -257,7 +257,7 @@ public class TfIdfNovelty extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Vectors' length").create(Fields.DIMENSIONS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Near documents").create(Fields.INPUT.get()));
+        .withDescription("Near documents").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Document dates").create(Fields.DOC_DATES.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -274,7 +274,8 @@ public class TfIdfNovelty extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.DOC_DATES.get())
         || !cmdline.hasOption(Fields.DIMENSIONS.get())) {
       HelpFormatter formatter = new HelpFormatter();
@@ -284,7 +285,7 @@ public class TfIdfNovelty extends Configured implements Tool {
     }
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
-    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
     dimensions = Integer.parseInt(cmdline.getOptionValue(Fields.DIMENSIONS.get()));
 

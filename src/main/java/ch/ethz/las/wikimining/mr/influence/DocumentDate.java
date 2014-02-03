@@ -92,7 +92,7 @@ public class DocumentDate extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("XML dump file").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("output location").create(Fields.INPUT.get()));
+        .withDescription("Output location").create(Fields.OUTPUT.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -103,7 +103,8 @@ public class DocumentDate extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())) {
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -111,12 +112,12 @@ public class DocumentDate extends Configured implements Tool {
     }
 
     String inputPath = cmdline.getOptionValue(Fields.INPUT.get());
-    String outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    String outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
     Job job = Job.getInstance(getConf());
     job.setJarByClass(DocumentDate.class);
     job.setJobName(String.format("Influence-Document Date[%s: %s, %s: %s]",
-        Fields.INPUT.get(), inputPath, Fields.INPUT.get(), outputPath));
+        Fields.INPUT.get(), inputPath, Fields.OUTPUT.get(), outputPath));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input path: " + inputPath);

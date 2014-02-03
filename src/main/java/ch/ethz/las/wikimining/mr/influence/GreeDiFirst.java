@@ -172,7 +172,7 @@ public class GreeDiFirst extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected articles").create(Fields.INPUT.get()));
+        .withDescription("Selected articles").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Document dates").create(Fields.DOC_DATES.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -193,7 +193,8 @@ public class GreeDiFirst extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.DOC_DATES.get())
         || !cmdline.hasOption(Fields.WORD_SPREAD.get())) {
       HelpFormatter formatter = new HelpFormatter();
@@ -203,7 +204,7 @@ public class GreeDiFirst extends Configured implements Tool {
     }
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
-    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
     wordSpreadPath = cmdline.getOptionValue(Fields.WORD_SPREAD.get());
 
@@ -217,7 +218,8 @@ public class GreeDiFirst extends Configured implements Tool {
         return -1;
       }
     }
-    selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
+    selectCount =
+        Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);

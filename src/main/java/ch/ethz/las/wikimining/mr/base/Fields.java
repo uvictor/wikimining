@@ -10,15 +10,15 @@ public enum Fields {
   BANDS("bands"),
   COMPRESSION("compression"),
   DIMENSIONS("dimensions"),
-  DOC_DATES("docDates"),
-  DOCS_SUBSET("docSubset"),
+  DOC_DATES("dates"),
+  DOCS_SUBSET("docs"),
   INPUT("input"),
   LANGUAGE("language"),
   OUTPUT("output"),
-  PARTITION_COUNT("partitionCount"),
+  PARTITION_COUNT("partitions"),
   ROWS("rows"),
-  SELECT_COUNT("selectCount"),
-  WORD_SPREAD("wordSpread"),
+  SELECT_COUNT("select"),
+  WORD_SPREAD("spread"),
   ;
 
   private final String value;

@@ -170,7 +170,7 @@ public class NearestDocs extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Near documents").create(Fields.INPUT.get()));
+        .withDescription("Near documents").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Vectors' length").create(Fields.DIMENSIONS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -187,7 +187,8 @@ public class NearestDocs extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.DIMENSIONS.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
@@ -196,7 +197,7 @@ public class NearestDocs extends Configured implements Tool {
     }
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
-    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
     dimensions = Integer.parseInt(cmdline.getOptionValue(Fields.DIMENSIONS.get()));
 
     bands = -1;

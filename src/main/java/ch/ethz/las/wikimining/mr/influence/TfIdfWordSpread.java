@@ -147,7 +147,7 @@ public class TfIdfWordSpread extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Near documents").create(Fields.INPUT.get()));
+        .withDescription("Near documents").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Document dates").create(Fields.DOC_DATES.get()));
 
@@ -160,7 +160,8 @@ public class TfIdfWordSpread extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.INPUT.get())
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.DOC_DATES.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
@@ -169,7 +170,7 @@ public class TfIdfWordSpread extends Configured implements Tool {
     }
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
-    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
 
     logger.info("Tool name: " + this.getClass().getName());
