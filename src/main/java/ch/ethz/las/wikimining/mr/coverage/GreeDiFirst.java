@@ -1,13 +1,9 @@
 package ch.ethz.las.wikimining.mr.coverage;
 
-import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
-import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
-import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -23,7 +19,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
@@ -57,28 +52,6 @@ public class GreeDiFirst extends Configured implements Tool {
           new DocumentWithVectorWritable(key, value);
 
       context.write(outKey, outValue);
-    }
-  }
-
-  private static class Reduce extends Reducer<
-      IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
-
-    @Override
-    public void reduce(IntWritable key,
-        Iterable<DocumentWithVectorWritable> values, Context context)
-        throws IOException, InterruptedException {
-      final WordCoverageFromMahout objectiveFunction =
-          new WordCoverageFromMahout(values);
-      final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
-      final int selectCount = context.getConfiguration()
-          .getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
-      Set<Integer> selected =
-          sfo.run(objectiveFunction.getAllDocIds(), selectCount);
-
-      for (Integer docId : selected) {
-        IntWritable outValue = new IntWritable(docId);
-        context.write(NullWritable.get(), outValue);
-      }
     }
   }
 
@@ -119,7 +92,7 @@ public class GreeDiFirst extends Configured implements Tool {
     job.setOutputValueClass(IntWritable.class);
 
     job.setMapperClass(Map.class);
-    job.setReducerClass(Reduce.class);
+    job.setReducerClass(GreeDiReducer.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
