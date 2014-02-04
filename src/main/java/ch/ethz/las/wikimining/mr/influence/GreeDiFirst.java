@@ -3,6 +3,7 @@ package ch.ethz.las.wikimining.mr.influence;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.utils.SetupHelper;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -19,9 +20,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -84,11 +82,9 @@ public class GreeDiFirst extends Configured implements Tool {
 
     job.setNumReduceTasks(partitionCount);
 
-    SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
-    FileOutputFormat.setOutputPath(job, new Path(outputPath));
-
-    job.setInputFormatClass(SequenceFileInputFormat.class);
-    job.setOutputFormatClass(TextOutputFormat.class);
+    SetupHelper.getInstance()
+        .setSequenceInput(job, inputPath)
+        .setTextOutput(job, outputPath);
 
     job.setMapOutputKeyClass(IntWritable.class);
     job.setMapOutputValueClass(DocumentWithVectorWritable.class);

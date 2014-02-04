@@ -2,8 +2,8 @@ package ch.ethz.las.wikimining.mr.influence;
 
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.utils.PageTypeChecker;
+import ch.ethz.las.wikimining.mr.utils.SetupHelper;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
-import edu.umd.cloud9.collection.wikipedia.WikipediaPageInputFormat;
 import java.io.IOException;
 import java.util.Calendar;
 import javax.xml.bind.DatatypeConverter;
@@ -23,11 +23,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -126,16 +123,9 @@ public class DocumentDate extends Configured implements Tool {
 
     job.setNumReduceTasks(0);
 
-    SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
-    SequenceFileOutputFormat.setOutputPath(job, new Path(outputPath));
-    SequenceFileOutputFormat
-        .setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
-    final int defaultBlockSize = 1000000;
-    job.getConfiguration()
-        .setInt("io.seqfile.compress.blocksize", defaultBlockSize);
-
-    job.setInputFormatClass(WikipediaPageInputFormat.class);
-    job.setOutputFormatClass(SequenceFileOutputFormat.class);
+    SetupHelper.getInstance()
+        .setSequenceInput(job, inputPath)
+        .setSequenceOutput(job, outputPath);
 
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(IntWritable.class);

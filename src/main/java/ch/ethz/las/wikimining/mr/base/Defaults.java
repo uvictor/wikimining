@@ -7,8 +7,9 @@ package ch.ethz.las.wikimining.mr.base;
  */
 public enum Defaults {
 
-  DIMENSIONS(-1),
   BANDS(9),
+  BLOCK_SIZE(1_000_000),
+  DIMENSIONS(-1),
   PARTITION_COUNT(10),
   ROWS(13),
   SELECT_COUNT(4),

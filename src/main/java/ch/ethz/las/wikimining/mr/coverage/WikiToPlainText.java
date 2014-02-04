@@ -82,7 +82,8 @@ public class WikiToPlainText extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.COMPRESSION.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
@@ -114,9 +115,9 @@ public class WikiToPlainText extends Configured implements Tool {
     Job job = Job.getInstance(getConf());
     job.setJarByClass(WikiToPlainText.class);
     job.setJobName(String.format(
-        "WikiToPlainText[%s: %s, %s: %s, %s: %s, %s: %s]",
-        Fields.INPUT.get(), inputPath, Fields.OUTPUT.get(), outputPath,
-        Fields.COMPRESSION.get(), compressionType, Fields.LANGUAGE.get(), language));
+        "WikiToPlainText[%s: %s, %s: %s, %s: %s, %s: %s]", Fields.INPUT.get(),
+        inputPath, Fields.OUTPUT.get(), outputPath, Fields.COMPRESSION.get(),
+        compressionType, Fields.LANGUAGE.get(), language));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - XML dump file: " + inputPath);

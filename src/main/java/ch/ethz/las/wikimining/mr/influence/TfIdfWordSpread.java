@@ -2,6 +2,7 @@ package ch.ethz.las.wikimining.mr.influence;
 
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.SetupHelper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,13 +17,10 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -117,15 +115,9 @@ public class TfIdfWordSpread extends Configured implements Tool {
 
     job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
 
-    final int blocksize = 1000000;
-    SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
-    SequenceFileOutputFormat.setOutputPath(job, new Path(outputPath));
-    SequenceFileOutputFormat
-        .setOutputCompressionType(job, SequenceFile.CompressionType.BLOCK);
-    job.getConfiguration().setInt("io.seqfile.compress.blocksize", blocksize);
-
-    job.setInputFormatClass(SequenceFileInputFormat.class);
-    job.setOutputFormatClass(SequenceFileOutputFormat.class);
+    SetupHelper.getInstance()
+        .setSequenceInput(job, inputPath)
+        .setSequenceOutput(job, outputPath);
 
     job.setMapOutputKeyClass(IntWritable.class);
     job.setMapOutputValueClass(VectorWritable.class);
