@@ -101,13 +101,17 @@ public class GreeDiFirst extends Configured implements Tool {
   private int parseArgs(String[] args) {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
+        .withDescription("Tfidf vectors")
+        .create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected articles").create(Fields.INPUT.get()));
+        .withDescription("Selected articles")
+        .create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
+        .withDescription("Partition count")
+        .create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
+        .withDescription("Select count")
+        .create(Fields.SELECT_COUNT.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -131,15 +135,16 @@ public class GreeDiFirst extends Configured implements Tool {
 
     partitionCount = Defaults.PARTITION_COUNT.get();
     if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
-      partitionCount =
-          Integer.parseInt(cmdline.getOptionValue(Fields.PARTITION_COUNT.get()));
+      partitionCount = Integer.parseInt(
+          cmdline.getOptionValue(Fields.PARTITION_COUNT.get()));
       if(partitionCount <= 0){
         System.err.println(
             "Error: \"" + partitionCount + "\" has to be positive!");
         return -1;
       }
     }
-    selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
+    selectCount =
+        Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
