@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=~/data/smallest
+DIR=~/data/20121001
 DOCNO=$DIR/docno.cloud9
 INDEX=$DIR/index.cloud9
 

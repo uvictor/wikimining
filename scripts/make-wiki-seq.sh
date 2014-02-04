@@ -10,6 +10,6 @@ hadoop jar \
 	$CLASS \
 	-input $DIR/$XML \
 	-output $DIR/plain \
-	-compression_type block \
-	-wiki_language en
+	-compression block \
+	-language en
 

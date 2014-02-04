@@ -1,11 +1,13 @@
 #!/bin/bash
 
 DIR=$1
-
-# Mahout currently works only with Hadoop 1.2.1
-export PATH="$PATH:/home/uvictor/hadoop-1.2.1/bin:/home/uvictor/mahout/bin"
+PARTITIONS=$2
 
 mahout seq2sparse \
+	-Dmapred.reduce.tasks=$PARTITIONS \
 	-i $DIR/plain \
-	-o $DIR/tfidf
+	-o $DIR/tfidf \
+	-n 2 \
+	-nv \
+	--numReducers $PARTITIONS \
 

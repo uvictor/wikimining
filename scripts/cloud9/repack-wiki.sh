@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DIR=~/data/smallest
-XML=$DIR/enwiki-20131104-smallest.xml
+DIR=~/data/20121001
+XML=$DIR/enwiki-20121001-pages-articles.xml
 DOCNO=$DIR/docno.cloud9
 BLOCK=$DIR/block.cloud9
 INDEX=$DIR/index.cloud9
