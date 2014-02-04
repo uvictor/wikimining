@@ -105,7 +105,7 @@ public class GreeDiFirst extends Configured implements Tool {
         .create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles")
-        .create(Fields.INPUT.get()));
+        .create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Partition count")
         .create(Fields.PARTITION_COUNT.get()));
@@ -123,7 +123,7 @@ public class GreeDiFirst extends Configured implements Tool {
     }
 
     if (!cmdline.hasOption(Fields.INPUT.get())
-        || !cmdline.hasOption(Fields.INPUT.get())) {
+        || !cmdline.hasOption(Fields.OUTPUT.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -131,7 +131,7 @@ public class GreeDiFirst extends Configured implements Tool {
     }
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
-    outputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
     partitionCount = Defaults.PARTITION_COUNT.get();
     if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
