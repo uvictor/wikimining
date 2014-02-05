@@ -6,6 +6,7 @@ import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.MatrixSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.SequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.SetupHelper;
 import java.io.IOException;
@@ -22,7 +23,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -35,7 +35,6 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.Vector.Element;
 import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.VectorFunction;
-import org.apache.mahout.math.random.RandomProjector;
 
 /**
  * Computes the novelty tf-idf according to equation 3.
@@ -59,16 +58,18 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     @Override
     public void setup(Context context) {
-      final int bandsCount = context.getConfiguration()
-          .getInt(Fields.BANDS.get(), Defaults.BANDS.get());
-      final int rowsCount = context.getConfiguration()
-          .getInt(Fields.ROWS.get(), Defaults.ROWS.get());
-      final int dimensions = context.getConfiguration()
-          .getInt(Fields.DIMENSIONS.get(), Defaults.DIMENSIONS.get());
+      try {
+        final Path basisPath =
+            new Path(context.getConfiguration().get(Fields.BASIS.get()));
+        FileSystem fs = FileSystem.get(context.getConfiguration());
 
-      // TODO(uvictor): Important!: use the same basisMatrix for all tasks !!
-      basisMatrix = RandomProjector
-          .generateBasisPlusMinusOne(bandsCount * rowsCount, dimensions);
+        final MatrixSequenceFileReader basisReader =
+            new MatrixSequenceFileReader(basisPath.suffix("/part-m-00000"),
+                fs, context.getConfiguration());
+        basisMatrix = basisReader.read();
+      } catch (IOException e) {
+        logger.fatal("Error loading basis matrix!", e);
+      }
     }
 
     @Override
@@ -108,8 +109,8 @@ public class TfIdfNovelty extends Configured implements Tool {
    * TODO(uvictor): consider selecting the nearest neighbour more accurately
    * (ie. use tighter bounds).
    */
-  private static class Reduce extends Reducer<HashBandWritable,
-      DocumentWithVectorWritable, IntWritable, VectorWritable> {
+  private static class Reduce extends Reducer<
+      HashBandWritable, DocumentWithVectorWritable, Text, VectorWritable> {
 
     private HashSet<Integer> parsedDocIds;
     private HashMap<Integer, Integer> docDates;
@@ -119,7 +120,8 @@ public class TfIdfNovelty extends Configured implements Tool {
       parsedDocIds = new HashSet<>();
 
       try {
-        Path datesPath = new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
+        Path datesPath =
+            new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
         logger.info("Loading doc dates: " + datesPath);
 
         FileSystem fs = FileSystem.get(context.getConfiguration());
@@ -174,8 +176,8 @@ public class TfIdfNovelty extends Configured implements Tool {
             }
           }
 
-          context.write(
-              new IntWritable(currentId), new VectorWritable(currentVector));
+          context.write(new Text(Integer.toString(currentId)),
+              new VectorWritable(currentVector));
           parsedDocIds.add(currentId);
           break;
         }
@@ -183,7 +185,7 @@ public class TfIdfNovelty extends Configured implements Tool {
         // Output vectors for documents that don't have a NN.
         // TODO(uvictor): try not outputting these documents.
         if (!parsedDocIds.contains(currentId)) {
-          context.write(new IntWritable(currentId),
+          context.write(new Text(Integer.toString(currentId)),
               new VectorWritable(current.getVector()));
         }
       }
@@ -194,8 +196,8 @@ public class TfIdfNovelty extends Configured implements Tool {
 
   private String inputPath;
   private String outputPath;
+  private String basisPath;
   private String datesPath;
-  private int dimensions;
   private int bands;
   private int rows;
 
@@ -212,14 +214,14 @@ public class TfIdfNovelty extends Configured implements Tool {
     job.setJarByClass(TfIdfNovelty.class);
     job.setJobName("Influence-TfIdfNovelty");
 
-    job.getConfiguration().setInt(Fields.DIMENSIONS.get(), dimensions);
+    job.getConfiguration().set(Fields.BASIS.get(), basisPath);
+    job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
     if (bands > 0) {
       job.getConfiguration().setInt(Fields.BANDS.get(), bands);
     }
     if (rows > 0) {
       job.getConfiguration().setInt(Fields.ROWS.get(), rows);
     }
-    job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
 
     SetupHelper.getInstance()
         .setSequenceInput(job, inputPath)
@@ -227,7 +229,7 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     job.setMapOutputKeyClass(HashBandWritable.class);
     job.setMapOutputValueClass(DocumentWithVectorWritable.class);
-    job.setOutputKeyClass(IntWritable.class);
+    job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(VectorWritable.class);
 
     job.setMapperClass(Map.class);
@@ -247,7 +249,7 @@ public class TfIdfNovelty extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Vectors' length").create(Fields.DIMENSIONS.get()));
+        .withDescription("Vectors' length").create(Fields.BASIS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Near documents").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -268,8 +270,8 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     if (!cmdline.hasOption(Fields.INPUT.get())
         || !cmdline.hasOption(Fields.OUTPUT.get())
-        || !cmdline.hasOption(Fields.DOC_DATES.get())
-        || !cmdline.hasOption(Fields.DIMENSIONS.get())) {
+        || !cmdline.hasOption(Fields.BASIS.get())
+        || !cmdline.hasOption(Fields.DOC_DATES.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -278,8 +280,8 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
+    basisPath = cmdline.getOptionValue(Fields.BASIS.get());
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
-    dimensions = Integer.parseInt(cmdline.getOptionValue(Fields.DIMENSIONS.get()));
 
     bands = -1;
     if (cmdline.hasOption(Fields.BANDS.get())) {
@@ -292,7 +294,7 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
-    logger.info(" - dimensions: " + dimensions);
+    logger.info(" - basis: " + basisPath);
     logger.info(" - output: " + outputPath);
     logger.info(" - dates: " + datesPath);
     logger.info(" - bands: " + bands);

@@ -5,6 +5,7 @@ import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import ch.ethz.las.wikimining.mr.base.TextArrayWritable;
 import ch.ethz.las.wikimining.mr.coverage.GreeDiFirst;
+import ch.ethz.las.wikimining.mr.utils.MatrixSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.SetupHelper;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,12 +30,13 @@ import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.VectorFunction;
-import org.apache.mahout.math.random.RandomProjector;
 
 /**
  * Finds k-nearest documents, for each document.
  * Uses Locality Sensitive Hashing with Random Projections (for cosine
  * similarity).
+ *
+ * @deprecated not used
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
@@ -52,16 +54,18 @@ public class NearestDocs extends Configured implements Tool {
 
     @Override
     public void setup(Context context) {
-      final int bandsCount = context.getConfiguration()
-          .getInt(Fields.BANDS.get(), Defaults.BANDS.get());
-      final int rowsCount = context.getConfiguration()
-          .getInt(Fields.ROWS.get(), Defaults.ROWS.get());
-      final int dimensions = context.getConfiguration()
-          .getInt(Fields.DIMENSIONS.get(), Defaults.DIMENSIONS.get());
+      try {
+        final Path basisPath =
+            new Path(context.getConfiguration().get(Fields.BASIS.get()));
+        FileSystem fs = FileSystem.get(context.getConfiguration());
 
-      // TODO(uvictor): Important!: use the same basisMatrix for all tasks !!
-      basisMatrix = RandomProjector
-          .generateBasisPlusMinusOne(bandsCount * rowsCount, dimensions);
+        final MatrixSequenceFileReader basisReader =
+            new MatrixSequenceFileReader(basisPath.suffix("/part-m-00000"),
+                fs, context.getConfiguration());
+        basisMatrix = basisReader.read();
+      } catch (IOException e) {
+        logger.fatal("Error loading basis matrix!", e);
+      }
     }
 
     @Override
@@ -116,7 +120,7 @@ public class NearestDocs extends Configured implements Tool {
 
   private String inputPath;
   private String outputPath;
-  private int dimensions;
+  private String basisPath;
   private int bands;
   private int rows;
 
@@ -133,7 +137,7 @@ public class NearestDocs extends Configured implements Tool {
     job.setJarByClass(GreeDiFirst.class);
     job.setJobName("Influence-NearestDocs");
 
-    job.getConfiguration().setInt(Fields.DIMENSIONS.get(), dimensions);
+    job.getConfiguration().set(Fields.BASIS.get(), basisPath);
     if (bands > 0) {
       job.getConfiguration().setInt(Fields.BANDS.get(), bands);
     }
@@ -169,7 +173,7 @@ public class NearestDocs extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Near documents").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Vectors' length").create(Fields.DIMENSIONS.get()));
+        .withDescription("Vectors' length").create(Fields.BASIS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Number of bands").create(Fields.BANDS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -186,7 +190,7 @@ public class NearestDocs extends Configured implements Tool {
 
     if (!cmdline.hasOption(Fields.INPUT.get())
         || !cmdline.hasOption(Fields.OUTPUT.get())
-        || !cmdline.hasOption(Fields.DIMENSIONS.get())) {
+        || !cmdline.hasOption(Fields.BASIS.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -195,7 +199,7 @@ public class NearestDocs extends Configured implements Tool {
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
-    dimensions = Integer.parseInt(cmdline.getOptionValue(Fields.DIMENSIONS.get()));
+    basisPath = cmdline.getOptionValue(Fields.BASIS.get());
 
     bands = -1;
     if (cmdline.hasOption(Fields.BANDS.get())) {
@@ -208,7 +212,7 @@ public class NearestDocs extends Configured implements Tool {
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
-    logger.info(" - dimensions: " + dimensions);
+    logger.info(" - basisPath: " + basisPath);
     logger.info(" - output: " + outputPath);
     logger.info(" - bands: " + bands);
     logger.info(" - rows: " + rows);

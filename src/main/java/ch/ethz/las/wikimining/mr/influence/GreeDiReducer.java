@@ -53,7 +53,7 @@ public class GreeDiReducer extends Reducer<
               wordSpreadPath, fs, context.getConfiguration());
       wordSpread = wordSpreadReader.read();
     } catch (IOException e) {
-      logger.fatal("Error loading doc dates!", e);
+      logger.fatal("Error loading doc dates or word spread!", e);
     }
   }
 

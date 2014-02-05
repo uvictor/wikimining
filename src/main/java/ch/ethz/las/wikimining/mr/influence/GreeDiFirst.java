@@ -42,8 +42,8 @@ public class GreeDiFirst extends Configured implements Tool {
     @Override
     public void map(Text key, VectorWritable value, Context context)
         throws IOException, InterruptedException {
-      final int partitionCount = context.getConfiguration()
-          .getInt(Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
+      final int partitionCount = context.getConfiguration().getInt(
+          Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
       final int partition = Integer.parseInt(key.toString()) % partitionCount;
       final IntWritable outKey = new IntWritable(partition);
 

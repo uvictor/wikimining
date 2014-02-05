@@ -8,6 +8,7 @@ package ch.ethz.las.wikimining.mr.base;
 public enum Fields {
 
   BANDS("bands"),
+  BASIS("basis"),
   COMPRESSION("compression"),
   DIMENSIONS("dimensions"),
   DOC_DATES("dates"),

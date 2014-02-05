@@ -41,7 +41,7 @@ public class DocumentDate extends Configured implements Tool {
 
   private static final Logger logger = Logger.getLogger(DocumentDate.class);
 
-  private static class MyMapper extends
+  private static class Map extends
       Mapper<LongWritable, WikipediaPage, IntWritable, IntWritable> {
 
     @Override
@@ -132,7 +132,7 @@ public class DocumentDate extends Configured implements Tool {
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(IntWritable.class);
 
-    job.setMapperClass(MyMapper.class);
+    job.setMapperClass(Map.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);

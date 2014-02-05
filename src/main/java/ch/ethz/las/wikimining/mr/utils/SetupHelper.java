@@ -2,12 +2,12 @@
 package ch.ethz.las.wikimining.mr.utils;
 
 import ch.ethz.las.wikimining.mr.base.Defaults;
+import edu.umd.cloud9.mapreduce.NullInputFormat;
 import java.io.IOException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
@@ -30,7 +30,7 @@ public class SetupHelper {
   private SetupHelper() { }
 
   public SetupHelper setTextOutput(Job job, String outputPath) {
-    FileOutputFormat.setOutputPath(job, new Path(outputPath));
+    TextOutputFormat.setOutputPath(job, new Path(outputPath));
     job.setOutputFormatClass(TextOutputFormat.class);
 
     return this;
@@ -52,6 +52,12 @@ public class SetupHelper {
         .setInt("io.seqfile.compress.blocksize", Defaults.BLOCK_SIZE.get());
 
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+    return this;
+  }
+
+  public SetupHelper setNullInput(Job job) {
+    job.setInputFormatClass(NullInputFormat.class);
 
     return this;
   }
