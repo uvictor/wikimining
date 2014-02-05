@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.functions.NovelFromMahout;
+import ch.ethz.las.wikimining.functions.DocumentInfluence;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
@@ -61,8 +61,8 @@ public class GreeDiReducer extends Reducer<
   public void reduce(IntWritable key,
       Iterable<DocumentWithVectorWritable> values, Context context)
       throws IOException, InterruptedException {
-    final NovelFromMahout objectiveFunction =
-        new NovelFromMahout(values, docDates, wordSpread);
+    final DocumentInfluence objectiveFunction =
+        new DocumentInfluence(values, docDates, wordSpread);
     final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
     final int selectCount = context.getConfiguration()
         .getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());

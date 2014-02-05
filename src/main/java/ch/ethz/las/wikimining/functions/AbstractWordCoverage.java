@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
  * Provides the structure for computing the word coverage as equation (1) from
  * the paper, given a way to retrieve the tf-idf scores.
  * <p>
+ * @deprecated not used
+ * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public abstract class AbstractWordCoverage implements ObjectiveFunction {

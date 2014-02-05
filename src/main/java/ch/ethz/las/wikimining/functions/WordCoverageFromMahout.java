@@ -7,20 +7,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
-import org.apache.mahout.math.Vector.Element;
+import org.apache.mahout.math.function.Functions;
 
 /**
  * Computes the word coverage as equation (1) from the paper, from a Mahout
  * index.
  * <p>
- * TODO(uvictor): use Vector.aggregate to keep the max?
- * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class WordCoverageFromMahout extends AbstractWordCoverage {
+public class WordCoverageFromMahout implements ObjectiveFunction {
 
-  private final List<Integer> allDocIds;
+  protected final List<Integer> allDocIds;
   protected final Map<Integer, Vector> documents;
 
   /**
@@ -63,46 +62,12 @@ public class WordCoverageFromMahout extends AbstractWordCoverage {
     }
 
     // Max tf-idfs for all terms from the allDocIds documents.
-    final Map<Integer, Score> maxScores = new HashMap<>();
+    final int cardinality = documents.get(allDocIds.get(0)).size();
+    final Vector maxScores = new RandomAccessSparseVector(cardinality);
     for (Integer docId : docIds) {
-      final Iterable<Element> terms = getTermsForDoc(docId);
-      if (terms != null) {
-        computeMaxScoresForDoc(terms, -1, maxScores);
-      }
+      maxScores.assign(documents.get(docId), Functions.MAX);
     }
 
-    double sum = 0;
-    for (Score score : maxScores.values()) {
-      sum += score.getWordWeight() * score.getMaxTfIdf();
-    }
-
-    return sum;
-  }
-
-  protected Iterable<Element> getTermsForDoc(int docId) {
-    return documents.get(docId).nonZeroes();
-  }
-
-  protected void computeMaxScoresForDoc(
-      Iterable<Element> terms, int date, Map<Integer, Score> maxScores) {
-    for (Element term : terms) {
-      final Integer word = term.index();
-      final double tfIdf = term.get();
-
-      final Score score = maxScores.get(word);
-      if (score == null) {
-        maxScores
-            .put(word, new Score(computeWordWeight(term, date), tfIdf));
-      } else if (tfIdf > score.getMaxTfIdf()) {
-        maxScores
-            .put(word, new Score(score.getWordWeight(), tfIdf));
-      }
-    }
-  }
-
-  // TODO(uvictor): consider using a non-constant word weight - all reducers
-  // load all global term frequencies.
-  protected double computeWordWeight(Element term, int date) {
-    return 1;
+    return maxScores.zSum();
   }
 }
