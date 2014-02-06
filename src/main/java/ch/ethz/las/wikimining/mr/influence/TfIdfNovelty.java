@@ -48,7 +48,8 @@ public class TfIdfNovelty extends Configured implements Tool {
 
   private static enum Records {
 
-    TOTAL
+    TOTAL,
+    POTENTIALLY_IGNORED
   };
 
   private static class Map extends Mapper<
@@ -107,7 +108,11 @@ public class TfIdfNovelty extends Configured implements Tool {
   /**
    * TODO(uvictor): Important!: remove duplicates !!
    * TODO(uvictor): consider selecting the nearest neighbour more accurately
-   * (ie. use tighter bounds).
+   * (ie, use tighter bounds).
+   *
+   * Currently, documents that don't have nearest neighbour in the past get
+   * ignored (we don't output any vector for them and they will not get
+   * considered).
    */
   private static class Reduce extends Reducer<
       HashBandWritable, DocumentWithVectorWritable, Text, VectorWritable> {
@@ -138,13 +143,21 @@ public class TfIdfNovelty extends Configured implements Tool {
     public void reduce(HashBandWritable key,
         Iterable<DocumentWithVectorWritable> docBucket, Context context)
         throws IOException, InterruptedException {
+      final boolean ignoreDocs =
+          context.getConfiguration().getBoolean(Fields.IGNORE.get(), false);
       final ArrayList<DocumentWithVector> docs = new ArrayList<>();
       for (DocumentWithVectorWritable doc : docBucket) {
         final int docId = Integer.parseInt(doc.getId().toString());
         docs.add(new DocumentWithVector(docId, doc.getVector().get()));
       }
+
       if (docs.size() <= 1) {
         // No near neighbours.
+        context.getCounter(Records.POTENTIALLY_IGNORED).increment(1);
+        if (!ignoreDocs) {
+          context.write(new Text(Integer.toString(docs.get(0).getId())),
+              new VectorWritable(docs.get(0).getVector()));
+        }
         return;
       }
 
@@ -162,7 +175,7 @@ public class TfIdfNovelty extends Configured implements Tool {
           if (currentId == beforeId) {
             continue;
           }
-          if (docDates.get(currentId) < docDates.get(beforeId)) {
+          if (docDates.get(beforeId) > docDates.get(currentId)) {
             continue;
           }
 
@@ -182,11 +195,12 @@ public class TfIdfNovelty extends Configured implements Tool {
           break;
         }
 
-        // Output vectors for documents that don't have a NN.
-        // TODO(uvictor): try not outputting these documents.
-        if (!parsedDocIds.contains(currentId)) {
-          context.write(new Text(Integer.toString(currentId)),
-              new VectorWritable(current.getVector()));
+        if (!parsedDocIds.contains((currentId))) {
+          context.getCounter(Records.POTENTIALLY_IGNORED).increment(1);
+          if (!ignoreDocs) {
+            context.write(new Text(Integer.toString(currentId)),
+                new VectorWritable(current.getVector()));
+          }
         }
       }
     }
@@ -198,6 +212,7 @@ public class TfIdfNovelty extends Configured implements Tool {
   private String outputPath;
   private String basisPath;
   private String datesPath;
+  private boolean ignoreDocs;
   private int bands;
   private int rows;
 
@@ -216,6 +231,7 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     job.getConfiguration().set(Fields.BASIS.get(), basisPath);
     job.getConfiguration().set(Fields.DOC_DATES.get(), datesPath);
+    job.getConfiguration().setBoolean(Fields.IGNORE.get(), ignoreDocs);
     if (bands > 0) {
       job.getConfiguration().setInt(Fields.BANDS.get(), bands);
     }
@@ -254,6 +270,8 @@ public class TfIdfNovelty extends Configured implements Tool {
         .withDescription("Near documents").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Document dates").create(Fields.DOC_DATES.get()));
+    options.addOption(OptionBuilder
+        .withDescription("Ignore docs without NN").create(Fields.IGNORE.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Number of bands").create(Fields.BANDS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -283,6 +301,10 @@ public class TfIdfNovelty extends Configured implements Tool {
     basisPath = cmdline.getOptionValue(Fields.BASIS.get());
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
 
+    ignoreDocs = false;
+    if (cmdline.hasOption(Fields.IGNORE.get())) {
+      ignoreDocs = true;
+    }
     bands = -1;
     if (cmdline.hasOption(Fields.BANDS.get())) {
       bands = Integer.parseInt(cmdline.getOptionValue(Fields.BANDS.get()));

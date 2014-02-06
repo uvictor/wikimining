@@ -13,6 +13,7 @@ public enum Fields {
   DIMENSIONS("dimensions"),
   DOC_DATES("dates"),
   DOCS_SUBSET("docs"),
+  IGNORE("ignore"),
   INPUT("input"),
   LANGUAGE("language"),
   OUTPUT("output"),
