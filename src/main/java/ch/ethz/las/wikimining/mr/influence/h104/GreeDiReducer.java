@@ -1,21 +1,26 @@
-package ch.ethz.las.wikimining.mr.influence;
+package ch.ethz.las.wikimining.mr.influence.h104;
 
 import ch.ethz.las.wikimining.functions.DocumentInfluence;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
-import ch.ethz.las.wikimining.mr.utils.VectorSequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.h104.VectorSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.Logger;
 import org.apache.mahout.math.Vector;
 
@@ -25,53 +30,55 @@ import org.apache.mahout.math.Vector;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class GreeDiReducer extends Reducer<
+public class GreeDiReducer extends MapReduceBase implements Reducer<
     IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
 
   private static final Logger logger = Logger.getLogger(GreeDiReducer.class);
 
   private HashMap<Integer, Integer> docDates;
   private HashMap<Integer, Vector> wordSpread;
+  private int selectCount;
 
   @Override
-  public void setup(Context context) {
+  public void configure(JobConf config) {
     try {
-      final FileSystem fs = FileSystem.get(context.getConfiguration());
+      final FileSystem fs = FileSystem.get(config);
 
       final Path datesPath =
-          new Path(context.getConfiguration().get(Fields.DOC_DATES.get()));
+          new Path(config.get(Fields.DOC_DATES.get()));
       final IntegerSequenceFileReader datesReader =
-          new IntegerSequenceFileReader(
-              datesPath, fs, context.getConfiguration());
+          new IntegerSequenceFileReader(datesPath, fs, config);
       docDates = datesReader.read();
 
       final Path wordSpreadPath =
-          new Path(context.getConfiguration().get(Fields.WORD_SPREAD.get()));
+          new Path(config.get(Fields.WORD_SPREAD.get()));
       final VectorSequenceFileReader wordSpreadReader =
-          new VectorSequenceFileReader(
-              wordSpreadPath, fs, context.getConfiguration());
+          new VectorSequenceFileReader(wordSpreadPath, fs, config);
       wordSpread = wordSpreadReader.read();
     } catch (IOException e) {
       logger.fatal("Error loading doc dates or word spread!", e);
     }
+
+    selectCount =
+        config.getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
   }
 
   @Override
   public void reduce(IntWritable key,
-      Iterable<DocumentWithVectorWritable> values, Context context)
-      throws IOException, InterruptedException {
+      Iterator<DocumentWithVectorWritable> values,
+      OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
+      throws IOException {
     final DocumentInfluence objectiveFunction =
         new DocumentInfluence(values, docDates, wordSpread);
     final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
-    final int selectCount = context.getConfiguration()
-        .getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
+
 
     Set<Integer> selected =
         sfo.run(objectiveFunction.getAllDocIds(), selectCount);
 
     for (Integer docId : selected) {
       IntWritable outValue = new IntWritable(docId);
-      context.write(NullWritable.get(), outValue);
+      output.collect(NullWritable.get(), outValue);
     }
   }
 }
