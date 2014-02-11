@@ -10,10 +10,12 @@ import ch.ethz.las.wikimining.mr.utils.h104.MatrixSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.TreeSet;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -37,8 +39,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
-import org.apache.mahout.math.Vector.Element;
 import org.apache.mahout.math.VectorWritable;
+import org.apache.mahout.math.function.DoubleDoubleFunction;
 import org.apache.mahout.math.function.VectorFunction;
 
 /**
@@ -154,66 +156,64 @@ public class TfIdfNovelty extends Configured implements Tool {
         Iterator<DocumentWithVectorWritable> docBucket,
         OutputCollector<Text, VectorWritable> output, Reporter reporter)
         throws IOException {
+      final TreeSet<DocumentWithVector> docs =
+          new TreeSet<>(new Comparator<DocumentWithVector>() {
 
-      final ArrayList<DocumentWithVector> docs = new ArrayList<>();
-      while (docBucket.hasNext()) {
-        final DocumentWithVectorWritable doc = docBucket.next();
-        final int docId = Integer.parseInt(doc.getId().toString());
-        docs.add(new DocumentWithVector(docId, doc.getVector().get()));
-      }
+            @Override
+            public int compare(DocumentWithVector o1, DocumentWithVector o2) {
+              return docDates.get(o1.getId()) - docDates.get(o2.getId());
+            }
+          });
+      addDocBucket(docBucket, docs);
 
       if (docs.size() <= 1) {
         // No near neighbours.
         reporter.getCounter(Records.POTENTIALLY_IGNORED).increment(1);
         if (!ignoreDocs) {
-          output.collect(new Text(Integer.toString(docs.get(0).getId())),
-              new VectorWritable(docs.get(0).getVector()));
+          output.collect(new Text(Integer.toString(docs.first().getId())),
+              new VectorWritable(docs.first().getVector()));
         }
         return;
       }
 
-      // TODO(uvictor): sort the documents on date and do binary search.
       // TODO(uvictor): consider different strategies for selecting the NN:
-      // first, random, closeset, closest date etc.
+      // first, random, closeset, *closest date* etc.
       for (DocumentWithVector current : docs) {
-        final int currentId = current.getId();
-        if (parsedDocIds.contains(currentId)) {
+        final DocumentWithVector before = docs.lower(current);
+        if (before == null) {
+          if (!ignoreDocs) {
+            output.collect(new Text(Integer.toString(current.getId())),
+                new VectorWritable(current.getVector()));
+          }
           continue;
         }
 
-        for (DocumentWithVector before : docs) {
-          final int beforeId = before.getId();
-          if (currentId == beforeId) {
-            continue;
-          }
-          if (docDates.get(beforeId) > docDates.get(currentId)) {
-            continue;
-          }
+        current
+            .getVector().assign(before.getVector(), new DoubleDoubleFunction() {
 
-          final Vector currentVector = current.getVector();
-          for (Element element : currentVector.nonZeroes()) {
-            final int index = element.index();
-            final double result =
-                element.get() - before.getVector().getQuick(index);
+          @Override
+          public double apply(double arg, double other) {
+            final double result = arg - other;
             if (result > 0) {
-              currentVector.setQuick(index, result);
+              return result;
             }
+            return 0;
           }
+        });
 
-          output.collect(new Text(Integer.toString(currentId)),
-              new VectorWritable(currentVector));
-          parsedDocIds.add(currentId);
-          break;
-        }
-
-        if (!parsedDocIds.contains((currentId))) {
-          reporter.getCounter(Records.POTENTIALLY_IGNORED).increment(1);
-          if (!ignoreDocs) {
-            output.collect(new Text(Integer.toString(currentId)),
-                new VectorWritable(current.getVector()));
-          }
-        }
+        output.collect(new Text(Integer.toString(current.getId())),
+            new VectorWritable(current.getVector()));
       }
+    }
+
+    private void addDocBucket(Iterator<DocumentWithVectorWritable> docBucket,
+        Collection<DocumentWithVector> docs) {
+      while (docBucket.hasNext()) {
+        final DocumentWithVectorWritable doc = docBucket.next();
+        final int docId = Integer.parseInt(doc.getId().toString());
+        docs.add(new DocumentWithVector(docId, doc.getVector().get()));
+      }
+      logger.info("Bucket size = " + docs.size());
     }
   }
 

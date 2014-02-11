@@ -11,7 +11,8 @@ import org.apache.hadoop.mapreduce.Mapper;
  */
 public class PageTypeChecker {
   private static enum PageTypes {
-    TOTAL, REDIRECT, DISAMBIGUATION, EMPTY, ARTICLE, STUB, NON_ARTICLE, OTHER
+    TOTAL, REDIRECT, DISAMBIGUATION, EMPTY, ARTICLE, STUB, NON_ARTICLE, OTHER,
+    LIST
   };
 
   /**
@@ -32,24 +33,29 @@ public class PageTypeChecker {
       context.getCounter(PageTypes.EMPTY).increment(1);
       return false;
     }
-    if (doc.isDisambiguation()) {
+    if (doc.isDisambiguation() || doc.getTitle().endsWith("(disambiguation)")) {
       context.getCounter(PageTypes.DISAMBIGUATION).increment(1);
+      return false;
+    }
+
+    if (doc.isStub()) {
+      context.getCounter(PageTypes.STUB).increment(1);
       return false;
     }
 
     if (doc.isArticle()) {
       // heuristic: potentially template or stub article
-      if (doc.getTitle().length() > 0.3 * doc.getContent().length()) {
+      if (doc.getTitle().length() > 0.03 * doc.getContent().length()) {
         context.getCounter(PageTypes.OTHER).increment(1);
         return false;
       }
-
-      if (doc.isStub()) {
-        context.getCounter(PageTypes.STUB).increment(1);
-      } else {
-        context.getCounter(PageTypes.ARTICLE).increment(1);
+      if (doc.getTitle().startsWith("List of")
+          || doc.getTitle().startsWith("List_of")) {
+        context.getCounter(PageTypes.LIST).increment(1);
+        return false;
       }
 
+      context.getCounter(PageTypes.ARTICLE).increment(1);
       return true;
     }
 
