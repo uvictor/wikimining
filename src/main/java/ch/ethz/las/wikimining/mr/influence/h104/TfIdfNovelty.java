@@ -1,21 +1,12 @@
 package ch.ethz.las.wikimining.mr.influence.h104;
 
 import ch.ethz.las.wikimining.mr.base.Defaults;
-import ch.ethz.las.wikimining.mr.base.DocumentWithVector;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.base.HashBandWritable;
-import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.h104.MatrixSequenceFileReader;
-import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.TreeSet;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -32,7 +23,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -40,7 +30,6 @@ import org.apache.log4j.Logger;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
-import org.apache.mahout.math.function.DoubleDoubleFunction;
 import org.apache.mahout.math.function.VectorFunction;
 
 /**
@@ -53,7 +42,7 @@ import org.apache.mahout.math.function.VectorFunction;
  */
 public class TfIdfNovelty extends Configured implements Tool {
 
-  private static enum Records {
+  static enum Records {
 
     TOTAL,
     POTENTIALLY_IGNORED
@@ -114,108 +103,6 @@ public class TfIdfNovelty extends Configured implements Tool {
     }
   }
 
-  /**
-   * TODO(uvictor): consider selecting the nearest neighbour more accurately
-   * (ie, use tighter bounds).
-   *
-   * Currently, documents that don't have nearest neighbour in the past get
-   * ignored (we don't output any vector for them and they will not get
-   * considered).
-   */
-  private static class Reduce extends MapReduceBase implements Reducer<
-      HashBandWritable, DocumentWithVectorWritable, Text, VectorWritable> {
-
-    private HashSet<Integer> parsedDocIds;
-    private HashMap<Integer, Integer> docDates;
-    private boolean ignoreDocs;
-
-    @Override
-    public void configure(JobConf config) {
-      parsedDocIds = new HashSet<>();
-
-      try {
-        Path datesPath =
-            new Path(config.get(Fields.DOC_DATES.get()));
-        logger.info("Loading doc dates: " + datesPath);
-
-        FileSystem fs = FileSystem.get(config);
-        final SequenceFileReader datesReader = new IntegerSequenceFileReader(
-            datesPath, fs, config);
-        docDates = datesReader.read();
-      } catch (IOException e) {
-        logger.fatal("Error loading doc dates!", e);
-      }
-      logger.info("Loaded " + docDates.size() + " doc dates.");
-
-      ignoreDocs = config.getBoolean(Fields.IGNORE.get(), false);
-    }
-
-    @Override
-    public void reduce(HashBandWritable key,
-        Iterator<DocumentWithVectorWritable> docBucket,
-        OutputCollector<Text, VectorWritable> output, Reporter reporter)
-        throws IOException {
-      final TreeSet<DocumentWithVector> docs =
-          new TreeSet<>(new Comparator<DocumentWithVector>() {
-
-            @Override
-            public int compare(DocumentWithVector o1, DocumentWithVector o2) {
-              return docDates.get(o1.getId()) - docDates.get(o2.getId());
-            }
-          });
-      addDocBucket(docBucket, docs);
-
-      if (docs.size() <= 1) {
-        // No near neighbours.
-        reporter.getCounter(Records.POTENTIALLY_IGNORED).increment(1);
-        if (!ignoreDocs) {
-          output.collect(new Text(Integer.toString(docs.first().getId())),
-              new VectorWritable(docs.first().getVector()));
-        }
-        return;
-      }
-
-      // TODO(uvictor): consider different strategies for selecting the NN:
-      // first, random, closeset, *closest date* etc.
-      for (DocumentWithVector current : docs) {
-        final DocumentWithVector before = docs.lower(current);
-        if (before == null) {
-          if (!ignoreDocs) {
-            output.collect(new Text(Integer.toString(current.getId())),
-                new VectorWritable(current.getVector()));
-          }
-          continue;
-        }
-
-        current
-            .getVector().assign(before.getVector(), new DoubleDoubleFunction() {
-
-          @Override
-          public double apply(double arg, double other) {
-            final double result = arg - other;
-            if (result > 0) {
-              return result;
-            }
-            return 0;
-          }
-        });
-
-        output.collect(new Text(Integer.toString(current.getId())),
-            new VectorWritable(current.getVector()));
-      }
-    }
-
-    private void addDocBucket(Iterator<DocumentWithVectorWritable> docBucket,
-        Collection<DocumentWithVector> docs) {
-      while (docBucket.hasNext()) {
-        final DocumentWithVectorWritable doc = docBucket.next();
-        final int docId = Integer.parseInt(doc.getId().toString());
-        docs.add(new DocumentWithVector(docId, doc.getVector().get()));
-      }
-      logger.info("Bucket size = " + docs.size());
-    }
-  }
-
   private static final Logger logger = Logger.getLogger(TfIdfNovelty.class);
 
   private String inputPath;
@@ -258,7 +145,7 @@ public class TfIdfNovelty extends Configured implements Tool {
     config.setOutputValueClass(VectorWritable.class);
 
     config.setMapperClass(Map.class);
-    config.setReducerClass(Reduce.class);
+    config.setReducerClass(TfIdfNoveltyReducer.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
