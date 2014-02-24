@@ -37,20 +37,23 @@ public class WikiToPlainText extends Configured implements Tool {
 
   private static final Logger logger = Logger.getLogger(WikiToPlainText.class);
 
-  private static class MyMapper extends
+  public static class Map extends
       Mapper<LongWritable, WikipediaPage, Text, Text> {
 
     @Override
     public void map(LongWritable key, WikipediaPage doc, Context context)
         throws IOException, InterruptedException {
-      if (!PageTypeChecker.isArticle(doc, context)) {
+      // We minimize the number of calls to doc.getContent() as it involves
+      // parsing the page XML for each call.
+      final String stringContent = PageTypeChecker.isArticle(doc, context);
+      if (stringContent == null) {
         return;
       }
 
       // TODO(uvictor): remove hack for Cloud9's WikipediaPage.getContent()
       final Text docContent;
       try {
-        docContent = new Text(doc.getContent());
+        docContent = new Text(stringContent);
       } catch (NullPointerException e) {
         logger.error("WikipediaPage.getContent() NullPointerExcetion", e);
         return;
@@ -116,7 +119,7 @@ public class WikiToPlainText extends Configured implements Tool {
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
 
-    job.setMapperClass(MyMapper.class);
+    job.setMapperClass(Map.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);

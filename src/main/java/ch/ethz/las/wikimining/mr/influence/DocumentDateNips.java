@@ -1,17 +1,8 @@
 package ch.ethz.las.wikimining.mr.influence;
 
 import ch.ethz.las.wikimining.mr.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.PageTypeChecker;
 import ch.ethz.las.wikimining.mr.utils.SetupHelper;
-import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
-import edu.umd.cloud9.collection.wikipedia.WikipediaPageInputFormat;
 import java.io.IOException;
-import java.util.Calendar;
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -23,74 +14,46 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
-import org.apache.tools.ant.filters.StringInputStream;
+import org.apache.mahout.math.VectorWritable;
 
 /**
- * Tool for extracting a date for each @{WikipediaPage}.
+ * Tool for extracting a date for each Nips paper. The date is actually
+ * represented by the first two digits of the key.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class DocumentDate extends Configured implements Tool {
+public class DocumentDateNips extends Configured implements Tool {
 
-  private static final Logger logger = Logger.getLogger(DocumentDate.class);
+  private static final Logger logger = Logger.getLogger(DocumentDateNips.class);
 
-  public static class Map extends
-      Mapper<LongWritable, WikipediaPage, IntWritable, IntWritable> {
+  private static class Map extends
+      Mapper<Text, VectorWritable, IntWritable, IntWritable> {
 
     @Override
-    public void map(LongWritable key, WikipediaPage doc, Context context)
+    public void map(Text key, VectorWritable value, Context context)
         throws IOException, InterruptedException {
-      if (PageTypeChecker.isArticle(doc, context) == null) {
-        return;
-      }
+      final int intId = Integer.parseInt(key.toString());
+      final IntWritable id = new IntWritable(intId);
+      final IntWritable date = new IntWritable(intId / 10000);
 
-      final IntWritable id = new IntWritable(Integer.parseInt(doc.getDocid()));
-      try {
-        final Calendar date = getPageTimeStamp(doc.getRawXML());
-        final IntWritable dateOutput = new IntWritable(
-            date.get(Calendar.YEAR) * 1000 + date.get(Calendar.DAY_OF_YEAR));
-
-        context.write(id, dateOutput);
-      } catch (XMLStreamException ex) {
-        logger.warn("Couldn't get the XML date for docid " + id, ex);
-      }
-    }
-
-    private Calendar getPageTimeStamp(String xml) throws XMLStreamException {
-      String timestamp = null;
-      XMLInputFactory factory = XMLInputFactory.newInstance();
-      XMLStreamReader reader =
-          factory.createXMLStreamReader(new StringInputStream(xml));
-
-      while(reader.hasNext()){
-        int event = reader.next();
-
-        if (event == XMLStreamConstants.CHARACTERS) {
-          timestamp = reader.getText();
-        } else if (event == XMLStreamConstants.END_ELEMENT) {
-          if ("timestamp".equals(reader.getLocalName())) {
-            break;
-          }
-        }
-      }
-
-      return DatatypeConverter.parseDateTime(timestamp);
+      context.write(id, date);
     }
   }
+
+  public DocumentDateNips() { }
 
   @SuppressWarnings("static-access")
   @Override
   public int run(String[] args) throws Exception {
     Options options = new Options();
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("XML dump file").create(Fields.INPUT.get()));
+        .withDescription("Tfidf").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Output location").create(Fields.OUTPUT.get()));
 
@@ -115,7 +78,7 @@ public class DocumentDate extends Configured implements Tool {
     String outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(DocumentDate.class);
+    job.setJarByClass(DocumentDateNips.class);
     job.setJobName(String.format("Influence-Document Date[%s: %s, %s: %s]",
         Fields.INPUT.get(), inputPath, Fields.OUTPUT.get(), outputPath));
 
@@ -125,9 +88,9 @@ public class DocumentDate extends Configured implements Tool {
 
     job.setNumReduceTasks(0);
 
-    SequenceFileInputFormat.addInputPath(job, new Path(inputPath));
-    job.setInputFormatClass(WikipediaPageInputFormat.class);
-    SetupHelper.getInstance().setSequenceOutput(job, outputPath);
+    SetupHelper.getInstance()
+        .setSequenceInput(job, inputPath)
+        .setSequenceOutput(job, outputPath);
 
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(IntWritable.class);
@@ -142,10 +105,7 @@ public class DocumentDate extends Configured implements Tool {
     return 0;
   }
 
-  public DocumentDate() {
-  }
-
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new DocumentDate(), args);
+    ToolRunner.run(new DocumentDateNips(), args);
   }
 }

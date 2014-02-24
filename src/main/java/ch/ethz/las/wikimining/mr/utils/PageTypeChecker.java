@@ -10,7 +10,8 @@ import org.apache.hadoop.mapreduce.Mapper;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class PageTypeChecker {
-  private static enum PageTypes {
+  // Visible for testing
+  public static enum PageTypes {
     TOTAL, REDIRECT, DISAMBIGUATION, EMPTY, ARTICLE, STUB, NON_ARTICLE, OTHER,
     LIST
   };
@@ -21,45 +22,52 @@ public class PageTypeChecker {
    * @param doc the Wikipedia page
    * @param context the MapReduce context
    *
-   * @return true if the Wiki page is an article
+   * @return null, if the page is not an article
+   *         the document content, otherwise
    */
-  public static boolean isArticle(WikipediaPage doc, Mapper.Context context) {
+  public static String isArticle(WikipediaPage doc, Mapper.Context context) {
     context.getCounter(PageTypes.TOTAL).increment(1);
     if (doc.isRedirect()) {
       context.getCounter(PageTypes.REDIRECT).increment(1);
-      return false;
+      return null;
     }
+
     if (doc.isEmpty()) {
       context.getCounter(PageTypes.EMPTY).increment(1);
-      return false;
+      return null;
     }
+
     if (doc.isDisambiguation() || doc.getTitle().endsWith("(disambiguation)")) {
       context.getCounter(PageTypes.DISAMBIGUATION).increment(1);
-      return false;
+      return null;
     }
 
     if (doc.isStub()) {
       context.getCounter(PageTypes.STUB).increment(1);
-      return false;
+      return null;
     }
 
     if (doc.isArticle()) {
-      // heuristic: potentially template or stub article
-      if (doc.getTitle().length() > 0.03 * doc.getContent().length()) {
-        context.getCounter(PageTypes.OTHER).increment(1);
-        return false;
-      }
       if (doc.getTitle().startsWith("List of")
-          || doc.getTitle().startsWith("List_of")) {
+          || doc.getTitle().startsWith("List_of")
+          || doc.getTitle().startsWith("Glossary of")
+          || doc.getTitle().startsWith("Glossary_of")) {
         context.getCounter(PageTypes.LIST).increment(1);
-        return false;
+        return null;
+      }
+
+      // Heuristic: potentially template or stub article
+      final String docContent = doc.getContent();
+      if (doc.getTitle().length() > 0.01 * docContent.length()) {
+        context.getCounter(PageTypes.OTHER).increment(1);
+        return null;
       }
 
       context.getCounter(PageTypes.ARTICLE).increment(1);
-      return true;
+      return docContent;
     }
 
     context.getCounter(PageTypes.NON_ARTICLE).increment(1);
-    return false;
+    return null;
   }
 }

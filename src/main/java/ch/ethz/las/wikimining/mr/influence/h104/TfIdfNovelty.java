@@ -115,7 +115,6 @@ public class TfIdfNovelty extends Configured implements Tool {
   }
 
   /**
-   * TODO(uvictor): Important!: remove duplicates !!
    * TODO(uvictor): consider selecting the nearest neighbour more accurately
    * (ie, use tighter bounds).
    *

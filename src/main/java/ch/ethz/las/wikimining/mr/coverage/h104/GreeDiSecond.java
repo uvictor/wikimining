@@ -5,6 +5,9 @@ import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -13,6 +16,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -35,47 +40,72 @@ import org.apache.mahout.math.VectorWritable;
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class GreeDiFirst extends Configured implements Tool {
-
-  private static final Logger logger = Logger.getLogger(GreeDiFirst.class);
-
-  private static enum Records {
-
-    TOTAL
-  };
+public class GreeDiSecond extends Configured implements Tool {
 
   private static class Map extends MapReduceBase implements Mapper<
       Text, VectorWritable, IntWritable, DocumentWithVectorWritable> {
 
-    int partitionCount;
+    private static final IntWritable zero = new IntWritable(0);
+
+    private Set<Integer> docsSubset;
 
     @Override
     public void configure(JobConf job) {
-      partitionCount =
-          job.getInt(Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
+      try {
+        Path path = new Path(job.get(Fields.DOCS_SUBSET.get()));
+        logger.info("Loading docs subset: " + path);
+
+        FileSystem fs = FileSystem.get(job);
+        if (!fs.exists(path)) {
+          throw new RuntimeException(path + " does not exist!");
+        }
+
+        readDocsSubset(path, fs);
+      } catch (IOException | RuntimeException e) {
+        logger.fatal("Error loading docs subset ids!", e);
+      }
     }
 
     @Override
     public void map(Text key, VectorWritable value,
         OutputCollector<IntWritable, DocumentWithVectorWritable> output,
         Reporter reporter) throws IOException {
-      reporter.getCounter(Records.TOTAL).increment(1);
-      final int partition = Integer.parseInt(key.toString()) % partitionCount;
-      final IntWritable outKey = new IntWritable(partition);
+      if (!docsSubset.contains(Integer.parseInt(key.toString()))) {
+        return;
+      }
 
       final DocumentWithVectorWritable outValue =
           new DocumentWithVectorWritable(key, value);
 
-      output.collect(outKey, outValue);
+      // We use IntWritable only so that we can reuse GreeDiReducer.
+      output.collect(zero, outValue);
+    }
+
+    private void readDocsSubset(Path path, FileSystem fs) throws IOException {
+      docsSubset = new HashSet<>();
+      final FileStatus[] statuses = fs.listStatus(path);
+      for (FileStatus status : statuses) {
+        if (status.isDir()) {
+          continue;
+        }
+        try (final FSDataInputStream in = fs.open(status.getPath());
+            final Scanner s = new Scanner(in)) {
+          while (s.hasNextInt()) {
+            docsSubset.add(s.nextInt());
+          }
+        }
+      }
     }
   }
 
+  private static final Logger logger = Logger.getLogger(GreeDiSecond.class);
+
   private String inputPath;
+  private String docsSubsetPath;
   private String outputPath;
-  private int partitionCount;
   private int selectCount;
 
-  public GreeDiFirst() { }
+  public GreeDiSecond() { }
 
   @Override
   public int run(String[] args) throws Exception {
@@ -84,14 +114,13 @@ public class GreeDiFirst extends Configured implements Tool {
       return ret;
     }
 
-    JobConf config = new JobConf(getConf(), GreeDiFirst.class);
-    config.setJobName(String.format(
-        "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
+    JobConf config = new JobConf(getConf(), GreeDiSecond.class);
+    config.setJobName(String.format("Coverage-GreeDiSecond[%s]", selectCount));
 
-    config.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
+    config.set(Fields.DOCS_SUBSET.get(), docsSubsetPath);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
-    config.setNumReduceTasks(partitionCount);
+    config.setNumReduceTasks(1);
 
     SetupHelper.getInstance()
         .setSequenceInput(config, inputPath)
@@ -119,9 +148,9 @@ public class GreeDiFirst extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Selected docs subset").create(Fields.DOCS_SUBSET.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles").create(Fields.OUTPUT.get()));
-    options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
@@ -134,7 +163,8 @@ public class GreeDiFirst extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())) {
+    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())
+        || !cmdline.hasOption(Fields.DOCS_SUBSET.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -142,30 +172,30 @@ public class GreeDiFirst extends Configured implements Tool {
     }
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
+    docsSubsetPath = cmdline.getOptionValue(Fields.DOCS_SUBSET.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
-    partitionCount = Defaults.PARTITION_COUNT.get();
-    if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
-      partitionCount =
-          Integer.parseInt(cmdline.getOptionValue(Fields.PARTITION_COUNT.get()));
-      if(partitionCount <= 0){
+    selectCount = Defaults.SELECT_COUNT.get();
+    if (cmdline.hasOption(Fields.SELECT_COUNT.get())) {
+      selectCount =
+          Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
+      if(selectCount <= 0){
         System.err.println(
-            "Error: \"" + partitionCount + "\" has to be positive!");
+            "Error: \"" + selectCount + "\" has to be positive!");
         return -1;
       }
     }
-    selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
+    logger.info(" - docs: " + docsSubsetPath);
     logger.info(" - output: " + outputPath);
-    logger.info(" - partitions: " + partitionCount);
     logger.info(" - select: " + selectCount);
 
     return 0;
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new GreeDiFirst(), args);
+    ToolRunner.run(new GreeDiSecond(), args);
   }
 }
