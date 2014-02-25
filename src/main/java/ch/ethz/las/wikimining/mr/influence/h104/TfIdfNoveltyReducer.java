@@ -1,12 +1,12 @@
 
 package ch.ethz.las.wikimining.mr.influence.h104;
 
-import ch.ethz.las.wikimining.mr.base.ClosestDateNeighbour;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVector;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import ch.ethz.las.wikimining.mr.base.NearestNeighbourCollection;
+import ch.ethz.las.wikimining.mr.base.SquaredNearestNeighbour;
 import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileReader;
 import java.io.IOException;
@@ -29,13 +29,10 @@ import org.apache.mahout.math.function.DoubleDoubleFunction;
 /**
  * Reducer to compute the novelty tf-idf according to equation 3.
  *
- * Finds k-nearest documents from the past, for each document.
- * Uses Locality Sensitive Hashing with Random Projections (for cosine
- * similarity).
- *
+ * Finds the k-nearest documents from the past, for each document.
  *
  * TODO(uvictor): consider selecting the nearest neighbour more accurately
- * (ie, use tighter bounds).
+ * (ie. use tighter bounds).
  *
  * One can ignore documents that don't have a nearest neighbour in the past
  * (we don't output any vector for them and they will not get considered), by
@@ -80,8 +77,10 @@ public class TfIdfNoveltyReducer
       Iterator<DocumentWithVectorWritable> docBucket,
       OutputCollector<Text, VectorWritable> output, Reporter reporter)
       throws IOException {
+    // TODO(uvictor): consider different strategies for selecting the NN:
+    // closest date, squared nearest, first, random etc.
     final NearestNeighbourCollection<DocumentWithVector> docs =
-        new ClosestDateNeighbour(docDates);
+        new SquaredNearestNeighbour(docDates);
 
     addDocBucket(docBucket, docs);
 
@@ -97,8 +96,6 @@ public class TfIdfNoveltyReducer
       return;
     }
 
-    // TODO(uvictor): consider different strategies for selecting the NN:
-    // first, random, closeset, *closest date* etc.
     for (DocumentWithVector current : docs) {
       final DocumentWithVector before = docs.getNearestNeighbour(current);
       if (before == null) {

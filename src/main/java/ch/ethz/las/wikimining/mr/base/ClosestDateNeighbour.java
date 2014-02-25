@@ -1,26 +1,18 @@
 
 package ch.ethz.las.wikimining.mr.base;
 
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.TreeSet;
 
 /**
- * Retrieves the document that is closest by date from the given document.
+ * Retrieves the document that is closest by date from the given document in
+ * O(log N).
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class ClosestDateNeighbour extends TreeSet<DocumentWithVector>
-    implements NearestNeighbourCollection<DocumentWithVector> {
+public class ClosestDateNeighbour extends AbstractNeighbour {
 
-  public ClosestDateNeighbour(final HashMap<Integer, Integer> docDates) {
-    super(new Comparator<DocumentWithVector>() {
-
-      @Override
-      public int compare(DocumentWithVector o1, DocumentWithVector o2) {
-        return docDates.get(o1.getId()) - docDates.get(o2.getId());
-      }
-    });
+  public ClosestDateNeighbour(final HashMap<Integer, Integer> theDocDates) {
+    super(theDocDates);
   }
 
   @Override
