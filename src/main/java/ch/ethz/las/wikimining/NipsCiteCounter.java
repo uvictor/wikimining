@@ -76,6 +76,12 @@ public class NipsCiteCounter {
       i += entry.getCount();
     }
     System.out.println("Bound: " + tempCount);
+
+    while (!temp.isEmpty()) {
+      final Multiset.Entry<Integer> entry = temp.pollLastEntry();
+      tempCount += entry.getCount() * entry.getElement();
+    }
+    System.out.println("All: " + tempCount);
   }
 
   private int computeTotalCites() {
@@ -93,13 +99,35 @@ public class NipsCiteCounter {
   }
 
   private int computeKey(String nameLine) {
+    return computeKeyBenyah(nameLine);
+    //return computeKeyKnowceans(nameLine);
+  }
+
+  private int computeCites(String nameLine) {
+    return computeCitesBenyah(nameLine);
+    //return computeCitesKnowceans(nameLine);
+  }
+
+  private int computeKeyBenyah(String nameLine) {
+    return computeKeyKnowceans(
+        nameLine.split("file is ../nipsdata/txt/", 2)[1]);
+  }
+
+  private int computeCitesBenyah(String citesLine) {
+    final Scanner scanner = new Scanner(citesLine);
+    scanner.nextInt();
+
+    return scanner.nextInt();
+  }
+
+  private int computeKeyKnowceans(String nameLine) {
     final int year = Integer.parseInt(nameLine.substring(4, 6));
     final int name = Integer.parseInt(nameLine.substring(7, 11));
 
     return year * 10_000 + name;
   }
 
-  private int computeCites(String citesLine) {
+  private int computeCitesKnowceans(String citesLine) {
     int count = 0;
 
     final Scanner scanner = new Scanner(citesLine);

@@ -28,9 +28,9 @@ import org.apache.mahout.math.VectorWritable;
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class DocumentDateNips extends Configured implements Tool {
+public class DocumentDateNipsAcl extends Configured implements Tool {
 
-  private static final Logger logger = Logger.getLogger(DocumentDateNips.class);
+  private static final Logger logger = Logger.getLogger(DocumentDateNipsAcl.class);
 
   private static class Map extends
       Mapper<Text, VectorWritable, IntWritable, IntWritable> {
@@ -40,13 +40,13 @@ public class DocumentDateNips extends Configured implements Tool {
         throws IOException, InterruptedException {
       final int intId = Integer.parseInt(key.toString());
       final IntWritable id = new IntWritable(intId);
-      final IntWritable date = new IntWritable(intId / 10000);
+      final IntWritable date = new IntWritable((intId / 10000) % 100);
 
       context.write(id, date);
     }
   }
 
-  public DocumentDateNips() { }
+  public DocumentDateNipsAcl() { }
 
   @SuppressWarnings("static-access")
   @Override
@@ -78,7 +78,7 @@ public class DocumentDateNips extends Configured implements Tool {
     String outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
 
     Job job = Job.getInstance(getConf());
-    job.setJarByClass(DocumentDateNips.class);
+    job.setJarByClass(DocumentDateNipsAcl.class);
     job.setJobName(String.format("Influence-Document Date[%s: %s, %s: %s]",
         Fields.INPUT.get(), inputPath, Fields.OUTPUT.get(), outputPath));
 
@@ -106,6 +106,6 @@ public class DocumentDateNips extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new DocumentDateNips(), args);
+    ToolRunner.run(new DocumentDateNipsAcl(), args);
   }
 }
