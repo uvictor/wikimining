@@ -59,8 +59,8 @@ public class DocumentInfluence extends WordCoverageFromMahout {
     final int cardinality = documents.get(allDocIds.get(0)).size();
     maxScores = new RandomAccessSparseVector(cardinality);
 
-    //return computeOnlyForDocumentDates();
-    return computeEquationFive();
+    return computeOnlyForDocumentDates();
+    //return computeEquationFive();
   }
 
   private double computeEquationFive() {
@@ -68,10 +68,12 @@ public class DocumentInfluence extends WordCoverageFromMahout {
     final Iterator<Entry<Integer, Vector>> it =
         wordSpread.entrySet().iterator();
     int docIndex = 0;
+    int last = -1;
 
     // All products are zero until the first document's date.
     while (it.hasNext()) {
       final Entry<Integer, Vector> word = it.next();
+
       if (updateMaxScores(word, docIndex)) {
         docIndex++;
         sum += word.getValue().dot(maxScores);
@@ -82,16 +84,18 @@ public class DocumentInfluence extends WordCoverageFromMahout {
 
     while (it.hasNext() && docIndex < docList.size()) {
       final Entry<Integer, Vector> word = it.next();
+
       if (updateMaxScores(word, docIndex)) {
         docIndex++;
       }
-
       sum += word.getValue().dot(maxScores);
     }
 
     // The max scores remain the same after the last document.
     while (it.hasNext()) {
-      sum += it.next().getValue().dot(maxScores);
+      final Entry<Integer, Vector> word = it.next();
+
+      sum += word.getValue().dot(maxScores);
     }
 
     return sum;

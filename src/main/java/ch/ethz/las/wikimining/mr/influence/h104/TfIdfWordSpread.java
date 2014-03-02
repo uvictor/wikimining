@@ -89,6 +89,7 @@ public class TfIdfWordSpread extends Configured implements Tool {
       final RandomAccessSparseVector sum =
           new RandomAccessSparseVector(docs.next().get());
 
+      // TODO(uvictor): consider 2-normalizing these vectors?
       while(docs.hasNext()) {
         sum.plus(docs.next().get());
       }

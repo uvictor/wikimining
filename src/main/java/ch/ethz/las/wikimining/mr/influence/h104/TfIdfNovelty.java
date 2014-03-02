@@ -77,7 +77,7 @@ public class TfIdfNovelty extends Configured implements Tool {
     config.setOutputKeyClass(Text.class);
     config.setOutputValueClass(VectorWritable.class);
 
-    config.setMapperClass(TfIdfNoveltyIdentityMapper.class);
+    config.setMapperClass(TfIdfNoveltyLshMapper.class);
     config.setReducerClass(TfIdfNoveltyReducer.class);
 
     // Delete the output directory if it exists already.

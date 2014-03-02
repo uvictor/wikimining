@@ -2,6 +2,7 @@ package ch.ethz.las.wikimining.mr.utils.h104;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,7 +27,7 @@ public abstract class SequenceFileReader<E, V> {
     fs = theFs;
     config = theConfig;
 
-    map = new HashMap<>();
+    map = new LinkedHashMap<>();
   }
 
   public HashMap<E, V> read() throws IOException {
