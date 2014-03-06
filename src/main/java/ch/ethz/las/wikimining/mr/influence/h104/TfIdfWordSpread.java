@@ -32,7 +32,7 @@ import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Computes tf-idf word spread according to equation 4.
+ * Computes tf-idf word spprocessContent according to equation 4.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
@@ -60,7 +60,7 @@ public class TfIdfWordSpread extends Configured implements Tool {
         final IntegerSequenceFileReader datesReader =
             new IntegerSequenceFileReader(
                 datesPath, fs, config);
-        docDates = datesReader.read();
+        docDates = datesReader.processFile();
       } catch (IOException e) {
         logger.fatal("Error loading doc dates!", e);
       }

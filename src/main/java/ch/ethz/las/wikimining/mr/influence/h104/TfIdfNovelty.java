@@ -3,6 +3,7 @@ package ch.ethz.las.wikimining.mr.influence.h104;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.IntArrayWritable;
 import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,13 +15,11 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
-import org.apache.mahout.math.VectorWritable;
 
 /**
  * Computes the novelty tf-idf according to equation 3.
@@ -74,11 +73,13 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     config.setMapOutputKeyClass(HashBandWritable.class);
     config.setMapOutputValueClass(DocumentWithVectorWritable.class);
-    config.setOutputKeyClass(Text.class);
-    config.setOutputValueClass(VectorWritable.class);
+    //config.setOutputKeyClass(Text.class);
+    //config.setOutputValueClass(VectorWritable.class);
+    config.setOutputKeyClass(HashBandWritable.class);
+    config.setOutputValueClass(IntArrayWritable.class);
 
     config.setMapperClass(TfIdfNoveltyLshMapper.class);
-    config.setReducerClass(TfIdfNoveltyReducer.class);
+    config.setReducerClass(TfIdfNoveltyIdentityReducer.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);

@@ -8,7 +8,7 @@ import java.util.HashMap;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class SquaredNearestNeighbour extends ClosestDateNeighbour {
+public class SquaredNearestNeighbour extends AbstractNeighbour {
 
   public SquaredNearestNeighbour(HashMap<Integer, Integer> theDocDates) {
     super(theDocDates);

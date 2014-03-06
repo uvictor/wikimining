@@ -51,8 +51,8 @@ public class GreeDiFirst extends Configured implements Tool {
 
     @Override
     public void configure(JobConf job) {
-      partitionCount =
-          job.getInt(Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
+      partitionCount = job.getInt(
+          Fields.PARTITION_COUNT.get(), Defaults.PARTITION_COUNT.get());
     }
 
     @Override
@@ -72,6 +72,7 @@ public class GreeDiFirst extends Configured implements Tool {
 
   private String inputPath;
   private String outputPath;
+  private String bucketsPath;
   private int partitionCount;
   private int selectCount;
 
@@ -88,6 +89,7 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setJobName(String.format(
         "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
 
+    config.set(Fields.BUCKETS.get(), bucketsPath);
     config.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
@@ -103,7 +105,7 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setOutputValueClass(IntWritable.class);
 
     config.setMapperClass(Map.class);
-    config.setReducerClass(GreeDiReducer.class);
+    config.setReducerClass(GreeDiLshBucketsReducer.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
@@ -120,6 +122,8 @@ public class GreeDiFirst extends Configured implements Tool {
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles").create(Fields.OUTPUT.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Buckets").create(Fields.BUCKETS.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
@@ -143,6 +147,7 @@ public class GreeDiFirst extends Configured implements Tool {
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
+    bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
 
     partitionCount = Defaults.PARTITION_COUNT.get();
     if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
@@ -159,6 +164,7 @@ public class GreeDiFirst extends Configured implements Tool {
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
     logger.info(" - output: " + outputPath);
+    logger.info(" - buckets: " + bucketsPath);
     logger.info(" - partitions: " + partitionCount);
     logger.info(" - select: " + selectCount);
 

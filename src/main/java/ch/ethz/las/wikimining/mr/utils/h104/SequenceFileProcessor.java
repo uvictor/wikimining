@@ -13,7 +13,7 @@ import org.apache.hadoop.mapred.JobConf;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public abstract class SequenceFileReader<E, V> {
+public abstract class SequenceFileProcessor<E, V> {
 
   protected final FileSystem fs;
   protected final JobConf config;
@@ -21,7 +21,7 @@ public abstract class SequenceFileReader<E, V> {
 
   private final Path path;
 
-  public SequenceFileReader(
+  public SequenceFileProcessor(
       Path thePath, FileSystem theFs, JobConf theConfig) {
     path = thePath;
     fs = theFs;
@@ -30,7 +30,7 @@ public abstract class SequenceFileReader<E, V> {
     map = new LinkedHashMap<>();
   }
 
-  public HashMap<E, V> read() throws IOException {
+  public HashMap<E, V> processFile() throws IOException {
     if (!fs.exists(path)) {
       throw new IOException(path + " does not exist!");
     }
@@ -44,11 +44,11 @@ public abstract class SequenceFileReader<E, V> {
         continue;
       }
 
-      readContent(status);
+      processContent(status);
     }
 
     return map;
   }
 
-  protected abstract void readContent(FileStatus status) throws IOException;
+  protected abstract void processContent(FileStatus status) throws IOException;
 }

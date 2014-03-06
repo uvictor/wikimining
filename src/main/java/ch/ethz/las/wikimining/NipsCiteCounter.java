@@ -108,7 +108,7 @@ public class NipsCiteCounter {
     //return computeCitesKnowceans(nameLine);
   }
 
-  private int computeKeyBenyah(String nameLine) {
+  public static int computeKeyBenyah(String nameLine) {
     return computeKeyKnowceans(
         nameLine.split("file is ../nipsdata/txt/", 2)[1]);
   }
@@ -120,7 +120,7 @@ public class NipsCiteCounter {
     return scanner.nextInt();
   }
 
-  private int computeKeyKnowceans(String nameLine) {
+  public static int computeKeyKnowceans(String nameLine) {
     final int year = Integer.parseInt(nameLine.substring(4, 6));
     final int name = Integer.parseInt(nameLine.substring(7, 11));
 

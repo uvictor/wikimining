@@ -59,8 +59,8 @@ public class DocumentInfluence extends WordCoverageFromMahout {
     final int cardinality = documents.get(allDocIds.get(0)).size();
     maxScores = new RandomAccessSparseVector(cardinality);
 
-    return computeOnlyForDocumentDates();
-    //return computeEquationFive();
+    //return computeOnlyForDocumentDates();
+    return computeEquationFive();
   }
 
   private double computeEquationFive() {

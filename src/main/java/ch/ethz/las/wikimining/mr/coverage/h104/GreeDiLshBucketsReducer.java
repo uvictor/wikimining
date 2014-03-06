@@ -1,15 +1,18 @@
-package ch.ethz.las.wikimining.mr.influence.h104;
 
-import ch.ethz.las.wikimining.functions.DocumentInfluence;
+package ch.ethz.las.wikimining.mr.coverage.h104;
+
+import ch.ethz.las.wikimining.functions.LshBuckets;
+import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
-import ch.ethz.las.wikimining.mr.utils.h104.VectorSequenceFileReader;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.utils.h104.BucketsSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import org.apache.hadoop.fs.FileSystem;
@@ -22,21 +25,20 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.Logger;
-import org.apache.mahout.math.Vector;
 
 /**
- * Applies the SFO greedy algorithm for influential documents (eq 5) as a Reduce
- * stage, part of the GreeDi protocol.
+ * Applies the SFO greedy algorithm for LSH buckets as a Reduce stage, part of
+ * the GreeDi protocol.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class GreeDiReducer extends MapReduceBase implements Reducer<
+public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
     IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
 
-  private static final Logger logger = Logger.getLogger(GreeDiReducer.class);
+  private static final Logger logger =
+      Logger.getLogger(GreeDiLshBucketsReducer.class);
 
-  private HashMap<Integer, Integer> docDates;
-  private HashMap<Integer, Vector> wordSpread;
+  private HashMap<HashBandWritable, HashSet<Integer>> buckets;
   private int selectCount;
 
   @Override
@@ -44,19 +46,13 @@ public class GreeDiReducer extends MapReduceBase implements Reducer<
     try {
       final FileSystem fs = FileSystem.get(config);
 
-      final Path datesPath =
-          new Path(config.get(Fields.DOC_DATES.get()));
-      final IntegerSequenceFileReader datesReader =
-          new IntegerSequenceFileReader(datesPath, fs, config);
-      docDates = datesReader.processFile();
-
-      final Path wordSpreadPath =
-          new Path(config.get(Fields.WORD_SPREAD.get()));
-      final VectorSequenceFileReader wordSpreadReader =
-          new VectorSequenceFileReader(wordSpreadPath, fs, config);
-      wordSpread = wordSpreadReader.processFile();
+      final Path bucketsPath =
+          new Path(config.get(Fields.BUCKETS.get()));
+      final BucketsSequenceFileReader bucketsReader =
+          new BucketsSequenceFileReader(bucketsPath, fs, config);
+      buckets = bucketsReader.processFile();
     } catch (IOException e) {
-      logger.fatal("Error loading doc dates or word spread!", e);
+      logger.fatal("Error loading buckets!", e);
     }
 
     selectCount =
@@ -68,13 +64,20 @@ public class GreeDiReducer extends MapReduceBase implements Reducer<
       Iterator<DocumentWithVectorWritable> values,
       OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
       throws IOException {
-    final DocumentInfluence objectiveFunction =
-        new DocumentInfluence(values, docDates, wordSpread);
-    final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
+    final WordCoverageFromMahout objectiveFunction =
+        new WordCoverageFromMahout(values);
+    logger.info("Created WordCoverageFromMahout");
 
+    final LshBuckets lshBuckets = new LshBuckets(buckets);
+    logger.info("Created LshBuckets");
+
+    final SfoGreedyAlgorithm sfo =
+        new SfoGreedyLazy(lshBuckets, reporter);
+    logger.info("Created SfoGreedyAlgorithm");
 
     Set<Integer> selected =
         sfo.run(objectiveFunction.getAllDocIds(), selectCount);
+    logger.info("Finished running SFO");
 
     for (Integer docId : selected) {
       IntWritable outValue = new IntWritable(docId);

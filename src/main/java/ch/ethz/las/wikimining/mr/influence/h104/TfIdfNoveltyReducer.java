@@ -8,12 +8,14 @@ import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import ch.ethz.las.wikimining.mr.base.NearestNeighbourCollection;
 import ch.ethz.las.wikimining.mr.base.SquaredNearestNeighbour;
 import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
-import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileReader;
+import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileProcessor;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.TreeMap;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -61,9 +63,9 @@ public class TfIdfNoveltyReducer
       logger.info("Loading doc dates: " + datesPath);
 
       FileSystem fs = FileSystem.get(config);
-      final SequenceFileReader datesReader = new IntegerSequenceFileReader(
+      final SequenceFileProcessor datesReader = new IntegerSequenceFileReader(
           datesPath, fs, config);
-      docDates = datesReader.read();
+      docDates = datesReader.processFile();
     } catch (IOException e) {
       logger.fatal("Error loading doc dates!", e);
     }
@@ -96,6 +98,8 @@ public class TfIdfNoveltyReducer
       return;
     }
 
+    // doc id, nearest doc id
+    final TreeMap<Integer, Integer> near = new TreeMap<>();
     for (DocumentWithVector current : docs) {
       final DocumentWithVector before = docs.getNearestNeighbour(current);
       if (before == null) {
@@ -103,8 +107,10 @@ public class TfIdfNoveltyReducer
           output.collect(new Text(Integer.toString(current.getId())),
               new VectorWritable(current.getVector()));
         }
+        near.put(current.getId(), -1);
         continue;
       }
+      near.put(current.getId(), before.getId());
 
       current
           .getVector().assign(before.getVector(), new DoubleDoubleFunction() {
@@ -121,6 +127,21 @@ public class TfIdfNoveltyReducer
 
       output.collect(new Text(Integer.toString(current.getId())),
           new VectorWritable(current.getVector()));
+    }
+
+    // doc id, consecutive id
+    final TreeMap<Integer, Integer> conv = new TreeMap<>();
+    int i = 0;
+    for (Integer id : near.keySet()) {
+      conv.put(id, i);
+      i++;
+    }
+    conv.put(-1, -1);
+    logger.warn(near.size() + " " + conv.size());
+    try (PrintWriter out = new PrintWriter("/home/uvictor/data/nips/near")) {
+      for (Integer nearId : near.values()) {
+        out.println(conv.get(nearId));
+      }
     }
   }
 

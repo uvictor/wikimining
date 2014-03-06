@@ -15,7 +15,7 @@ import org.apache.hadoop.util.ReflectionUtils;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class IntegerSequenceFileReader
-    extends SequenceFileReader<Integer, Integer> {
+    extends SequenceFileProcessor<Integer, Integer> {
 
   public IntegerSequenceFileReader(
       Path thePath, FileSystem theFs, JobConf theConfig) {
@@ -23,7 +23,7 @@ public class IntegerSequenceFileReader
   }
 
   @Override
-  protected void readContent(FileStatus status) throws IOException {
+  protected void processContent(FileStatus status) throws IOException {
     try (SequenceFile.Reader reader =
         new SequenceFile.Reader(fs, status.getPath(), config)) {
       IntWritable key = (IntWritable)

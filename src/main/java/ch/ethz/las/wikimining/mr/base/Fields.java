@@ -9,6 +9,7 @@ public enum Fields {
 
   BANDS("bands"),
   BASIS("basis"),
+  BUCKETS("buckets"),
   COMPRESSION("compression"),
   DIMENSIONS("dimensions"),
   DOC_DATES("dates"),
