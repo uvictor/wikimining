@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining;
+package ch.ethz.las.wikimining.evaluate;
 
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
@@ -18,7 +18,8 @@ import org.apache.log4j.Logger;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class AanCiteCounter {
-  private static final String SELECTED_FILE = "part-00000";
+
+  private final Logger logger;
 
   private final String selectedPath;
   private final String citesPath;
@@ -26,11 +27,9 @@ public class AanCiteCounter {
   // Map from Key to cite count.
   private HashMap<Integer, Integer> docCites;
 
-  private final Logger logger;
-
-  public AanCiteCounter(String theSelectedPath, String theStatsPath) {
-    selectedPath = theSelectedPath + SELECTED_FILE;
-    citesPath = theStatsPath;
+  public AanCiteCounter(String theSelectedPath, String theCitesPath) {
+    selectedPath = theSelectedPath;
+    citesPath = theCitesPath;
 
     logger = Logger.getLogger(this.getClass());
   }

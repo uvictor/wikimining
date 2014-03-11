@@ -68,6 +68,6 @@ public class WordCoverageFromMahout implements ObjectiveFunction {
       maxScores.assign(documents.get(docId), Functions.MAX);
     }
 
-    return maxScores.zSum();
+    return maxScores.zSum() / maxScores.size();
   }
 }

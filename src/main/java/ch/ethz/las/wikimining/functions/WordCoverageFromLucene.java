@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.ImportWiki;
+import ch.ethz.las.wikimining.evaluate.WikiDatabase;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -113,7 +113,7 @@ public class WordCoverageFromLucene extends AbstractWordCoverage {
     final Terms terms = reader.getTermVector(docId, fieldName);
     if (terms == null) {
       final String title =
-          reader.document(docId).get(ImportWiki.FieldNames.TITLE.toString());
+          reader.document(docId).get(WikiDatabase.FieldNames.TITLE.toString());
       logger.warn("Document " + title + "(" + docId + ")" + " has an empty"
           + " term vector");
     }

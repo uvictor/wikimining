@@ -89,7 +89,6 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setJobName(String.format(
         "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
 
-    config.set(Fields.BUCKETS.get(), bucketsPath);
     config.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
@@ -105,7 +104,12 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setOutputValueClass(IntWritable.class);
 
     config.setMapperClass(Map.class);
-    config.setReducerClass(GreeDiLshBucketsReducer.class);
+    if (bucketsPath != null) {
+      config.set(Fields.BUCKETS.get(), bucketsPath);
+      config.setReducerClass(GreeDiLshBucketsReducer.class);
+    } else {
+      config.setReducerClass(GreeDiReducer.class);
+    }
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);

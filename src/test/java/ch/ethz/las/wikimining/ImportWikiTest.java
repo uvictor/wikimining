@@ -1,6 +1,7 @@
 
 package ch.ethz.las.wikimining;
 
+import ch.ethz.las.wikimining.evaluate.WikiDatabase;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.junit.After;
@@ -10,11 +11,11 @@ import org.junit.Test;
 
 public class ImportWikiTest {
 
-  private ImportWiki wiki;
+  private WikiDatabase wiki;
 
   @Before
   public void setUp() {
-    wiki = new ImportWiki();
+    wiki = new WikiDatabase();
   }
 
   @After

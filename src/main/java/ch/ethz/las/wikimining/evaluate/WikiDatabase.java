@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining;
+package ch.ethz.las.wikimining.evaluate;
 
 import de.tudarmstadt.ukp.wikipedia.api.Category;
 import de.tudarmstadt.ukp.wikipedia.api.DatabaseConfiguration;
@@ -35,7 +35,7 @@ import org.apache.lucene.util.Version;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class ImportWiki {
+public class WikiDatabase {
 
   public static enum FieldNames {
 
@@ -77,7 +77,7 @@ public class ImportWiki {
   private IndexWriterConfig indexConfig;
   private boolean initialized;
 
-  public ImportWiki() {
+  public WikiDatabase() {
     logger = Logger.getLogger(this.getClass());
     threadPool = Executors.newFixedThreadPool(WikiMining.THREAD_COUNT);
     initialized = false;
@@ -120,16 +120,16 @@ public class ImportWiki {
   }
 
   public Wikipedia getWiki() {
-    assert initialized;
     return wiki;
   }
 
   public Directory getIndexDir() {
-    assert initialized;
     return indexDir;
   }
 
-  private void initialiseWikiDatabase() throws WikiInitializationException {
+  public void initialiseWikiDatabase() throws WikiInitializationException {
+    final long start = System.currentTimeMillis();
+
     // Configure the database connection parameters
     final DatabaseConfiguration dbConfig = new DatabaseConfiguration();
     dbConfig.setHost("localhost");
@@ -140,6 +140,9 @@ public class ImportWiki {
 
     // Create the Wikipedia object
     wiki = new Wikipedia(dbConfig);
+
+    final long time = (System.currentTimeMillis() - start) / 1000;
+    logger.warn("Finished importing after " + time + " seconds.");
   }
 
   private void initializeLuceneInRam() {
@@ -306,7 +309,7 @@ public class ImportWiki {
 
     // StringField doesn't tokenize
     document.add(new StringField(
-        ImportWiki.FieldNames.TITLE.toString(), title, Field.Store.YES));
+        WikiDatabase.FieldNames.TITLE.toString(), title, Field.Store.YES));
     // Field which tokenizes and has the inverted indexes.
     FieldType indexedType = new FieldType();
     indexedType.setStored(false);
@@ -314,7 +317,7 @@ public class ImportWiki {
     indexedType.setIndexed(true);
     indexedType.setStoreTermVectors(true);
     document.add(new Field(
-        ImportWiki.FieldNames.TEXT.toString(), plainText,indexedType));
+        WikiDatabase.FieldNames.TEXT.toString(), plainText,indexedType));
     try {
       writer.addDocument(document);
     } catch (IOException ex) {

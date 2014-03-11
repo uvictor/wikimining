@@ -1,4 +1,4 @@
-package ch.ethz.las.wikimining;
+package ch.ethz.las.wikimining.evaluate;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
 import ch.ethz.las.wikimining.functions.WordCoverageFromLucene;
@@ -23,7 +23,7 @@ public class WikiMining {
   public static void main(String[] args)
       throws WikiInitializationException, WikiApiException, IOException {
     // Import Wikipedia
-    ImportWiki wiki = new ImportWiki();
+    WikiDatabase wiki = new WikiDatabase();
     final long start = System.currentTimeMillis();
     wiki.initialiseForReading();
     final long time = (System.currentTimeMillis() - start) / 1000;
@@ -35,7 +35,7 @@ public class WikiMining {
     // Initialize Lucene reading
     try (final IndexReader reader = DirectoryReader.open(wiki.getIndexDir())) {
       final ObjectiveFunction objectiveFunction = new WordCoverageFromLucene(
-              reader, ImportWiki.FieldNames.TEXT.toString());
+              reader, WikiDatabase.FieldNames.TEXT.toString());
       final SfoGreedyAlgorithm sfo = new SfoGreedyLazy(objectiveFunction);
       final ArrayList<ArrayList<Integer>> G = readGraph();
 
@@ -55,7 +55,7 @@ public class WikiMining {
     for (Integer docId : selected) {
       final Document topDoc = reader.document(docId);
       final String topTitle =
-          topDoc.getField(ImportWiki.FieldNames.TITLE.toString()).stringValue();
+          topDoc.getField(WikiDatabase.FieldNames.TITLE.toString()).stringValue();
       System.out.println(docId + ": " + topTitle);
     }
   }

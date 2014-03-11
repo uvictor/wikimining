@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining;
+package ch.ethz.las.wikimining.evaluate;
 
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
@@ -18,7 +18,6 @@ import org.apache.log4j.Logger;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class NipsCiteCounter {
-  private static final String SELECTED_FILE = "part-00000";
   private static final String DOC_NAMES = "nips.docnames";
   private static final String CITE = "nips.cite";
 
@@ -31,7 +30,7 @@ public class NipsCiteCounter {
   private final Logger logger;
 
   public NipsCiteCounter(String theSelectedPath, String theStatsPath) {
-    selectedPath = theSelectedPath + SELECTED_FILE;
+    selectedPath = theSelectedPath;
     statsPath = theStatsPath;
 
     logger = Logger.getLogger(this.getClass());

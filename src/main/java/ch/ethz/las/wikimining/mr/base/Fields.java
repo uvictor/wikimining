@@ -18,6 +18,7 @@ public enum Fields {
   INPUT("input"),
   LANGUAGE("language"),
   OUTPUT("output"),
+  OUTPUT_BUCKETS("outputBuckets"),
   PARTITION_COUNT("partitions"),
   ROWS("rows"),
   SELECT_COUNT("select"),

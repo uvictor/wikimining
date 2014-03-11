@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.sfo;
 
-import ch.ethz.las.wikimining.ImportWiki;
+import ch.ethz.las.wikimining.evaluate.WikiDatabase;
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
 import ch.ethz.las.wikimining.functions.WordCoverageFromLucene;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
@@ -22,14 +22,14 @@ import org.junit.Test;
  */
 public class SfoGreedyStableLazyTest {
 
-  private static ImportWiki wiki;
+  private static WikiDatabase wiki;
   private SfoGreedyAlgorithm greedyNonLazy;
   private SfoGreedyAlgorithm greedyStableLazy;
   private int docsCount;
 
   @BeforeClass
   public static void setUpClass() throws IOException, WikiApiException {
-    wiki = new ImportWiki();
+    wiki = new WikiDatabase();
     wiki.initialiseAndIndexForTest();
   }
 
@@ -42,7 +42,7 @@ public class SfoGreedyStableLazyTest {
   public void setUp() throws IOException {
     final IndexReader reader = DirectoryReader.open(wiki.getIndexDir());
     final ObjectiveFunction objectiveFunction
-        = new WordCoverageFromLucene(reader, ImportWiki.FieldNames.TEXT.toString());
+        = new WordCoverageFromLucene(reader, WikiDatabase.FieldNames.TEXT.toString());
 
     docsCount = reader.numDocs();
     greedyNonLazy = new SfoGreedyNonLazy(objectiveFunction);

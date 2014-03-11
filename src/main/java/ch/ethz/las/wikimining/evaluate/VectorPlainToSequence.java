@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining;
+package ch.ethz.las.wikimining.evaluate;
 
 import ch.ethz.las.wikimining.mr.utils.h104.TextVectorSequenceFileWriter;
 import java.io.BufferedReader;
@@ -74,11 +74,11 @@ public class VectorPlainToSequence {
   private void writeVectors() {
     try {
       JobConf config = new JobConf();
-      final FileSystem fs = FileSystem.get(config);
       final Path sequencesPath = new Path(sequencePath);
+      final FileSystem fs = FileSystem.get(config);
       final TextVectorSequenceFileWriter vectorsWriter =
           new TextVectorSequenceFileWriter(tfidfs, sequencesPath, fs, config);
-      tfidfs = vectorsWriter.processFile();
+      vectorsWriter.processFile();
     } catch (IOException e) {
       logger.fatal("Cannot write to sequence file", e);
     }

@@ -10,7 +10,6 @@ import ch.ethz.las.wikimining.mr.base.SquaredNearestNeighbour;
 import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileProcessor;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -127,21 +126,6 @@ public class TfIdfNoveltyReducer
 
       output.collect(new Text(Integer.toString(current.getId())),
           new VectorWritable(current.getVector()));
-    }
-
-    // doc id, consecutive id
-    final TreeMap<Integer, Integer> conv = new TreeMap<>();
-    int i = 0;
-    for (Integer id : near.keySet()) {
-      conv.put(id, i);
-      i++;
-    }
-    conv.put(-1, -1);
-    logger.warn(near.size() + " " + conv.size());
-    try (PrintWriter out = new PrintWriter("/home/uvictor/data/nips/near")) {
-      for (Integer nearId : near.values()) {
-        out.println(conv.get(nearId));
-      }
     }
   }
 

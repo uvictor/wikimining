@@ -2,6 +2,7 @@
 package ch.ethz.las.wikimining.mr.coverage.h104;
 
 import ch.ethz.las.wikimining.functions.LshBuckets;
+import ch.ethz.las.wikimining.functions.ObjectiveCombiner;
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
@@ -11,6 +12,7 @@ import ch.ethz.las.wikimining.mr.utils.h104.BucketsSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,9 +47,7 @@ public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
   public void configure(JobConf config) {
     try {
       final FileSystem fs = FileSystem.get(config);
-
-      final Path bucketsPath =
-          new Path(config.get(Fields.BUCKETS.get()));
+      final Path bucketsPath = new Path(config.get(Fields.BUCKETS.get()));
       final BucketsSequenceFileReader bucketsReader =
           new BucketsSequenceFileReader(bucketsPath, fs, config);
       buckets = bucketsReader.processFile();
@@ -64,19 +64,20 @@ public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
       Iterator<DocumentWithVectorWritable> values,
       OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
       throws IOException {
-    final WordCoverageFromMahout objectiveFunction =
+    final WordCoverageFromMahout wordCoverage =
         new WordCoverageFromMahout(values);
     logger.info("Created WordCoverageFromMahout");
-
     final LshBuckets lshBuckets = new LshBuckets(buckets);
     logger.info("Created LshBuckets");
+    final ObjectiveCombiner combiner = new ObjectiveCombiner(
+        Arrays.asList(1.25D, 1D), wordCoverage, lshBuckets);
 
     final SfoGreedyAlgorithm sfo =
-        new SfoGreedyLazy(lshBuckets, reporter);
+        new SfoGreedyLazy(combiner, reporter);
     logger.info("Created SfoGreedyAlgorithm");
 
     Set<Integer> selected =
-        sfo.run(objectiveFunction.getAllDocIds(), selectCount);
+        sfo.run(wordCoverage.getAllDocIds(), selectCount);
     logger.info("Finished running SFO");
 
     for (Integer docId : selected) {

@@ -15,11 +15,13 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
+import org.apache.mahout.math.VectorWritable;
 
 /**
  * Computes the novelty tf-idf according to equation 3.
@@ -42,6 +44,7 @@ public class TfIdfNovelty extends Configured implements Tool {
   private String basisPath;
   private String datesPath;
   private boolean ignoreDocs;
+  private boolean outputBuckets;
   private int bands;
   private int rows;
 
@@ -58,7 +61,9 @@ public class TfIdfNovelty extends Configured implements Tool {
     config.setJobName("Influence-TfIdfNovelty");
 
     config.set(Fields.BASIS.get(), basisPath);
-    config.set(Fields.DOC_DATES.get(), datesPath);
+    if (datesPath != null) {
+      config.set(Fields.DOC_DATES.get(), datesPath);
+    }
     config.setBoolean(Fields.IGNORE.get(), ignoreDocs);
     if (bands > 0) {
       config.setInt(Fields.BANDS.get(), bands);
@@ -73,13 +78,17 @@ public class TfIdfNovelty extends Configured implements Tool {
 
     config.setMapOutputKeyClass(HashBandWritable.class);
     config.setMapOutputValueClass(DocumentWithVectorWritable.class);
-    //config.setOutputKeyClass(Text.class);
-    //config.setOutputValueClass(VectorWritable.class);
-    config.setOutputKeyClass(HashBandWritable.class);
-    config.setOutputValueClass(IntArrayWritable.class);
-
     config.setMapperClass(TfIdfNoveltyLshMapper.class);
-    config.setReducerClass(TfIdfNoveltyIdentityReducer.class);
+
+    if (outputBuckets) {
+      config.setOutputKeyClass(HashBandWritable.class);
+      config.setOutputValueClass(IntArrayWritable.class);
+      config.setReducerClass(TfIdfNoveltyIdentityReducer.class);
+    } else {
+      config.setOutputKeyClass(Text.class);
+      config.setOutputValueClass(VectorWritable.class);
+      config.setReducerClass(TfIdfNoveltyReducer.class);
+    }
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
@@ -102,6 +111,8 @@ public class TfIdfNovelty extends Configured implements Tool {
         .withDescription("Document dates").create(Fields.DOC_DATES.get()));
     options.addOption(OptionBuilder
         .withDescription("Ignore docs without NN").create(Fields.IGNORE.get()));
+    options.addOption(OptionBuilder
+        .withDescription("Output buckets").create(Fields.OUTPUT_BUCKETS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Number of bands").create(Fields.BANDS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
@@ -119,7 +130,8 @@ public class TfIdfNovelty extends Configured implements Tool {
     if (!cmdline.hasOption(Fields.INPUT.get())
         || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.BASIS.get())
-        || !cmdline.hasOption(Fields.DOC_DATES.get())) {
+        || (!cmdline.hasOption(Fields.DOC_DATES.get())
+        && !cmdline.hasOption(Fields.OUTPUT_BUCKETS.get()))) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -134,6 +146,10 @@ public class TfIdfNovelty extends Configured implements Tool {
     ignoreDocs = false;
     if (cmdline.hasOption(Fields.IGNORE.get())) {
       ignoreDocs = true;
+    }
+    outputBuckets = false;
+    if (cmdline.hasOption(Fields.OUTPUT_BUCKETS.get())) {
+      outputBuckets = true;
     }
     bands = -1;
     if (cmdline.hasOption(Fields.BANDS.get())) {
@@ -150,6 +166,7 @@ public class TfIdfNovelty extends Configured implements Tool {
     logger.info(" - output: " + outputPath);
     logger.info(" - dates: " + datesPath);
     logger.info(" - ignore: " + ignoreDocs);
+    logger.info(" - outputBuckets: " + outputBuckets);
     logger.info(" - bands: " + bands);
     logger.info(" - rows: " + rows);
 

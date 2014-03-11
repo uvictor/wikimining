@@ -103,6 +103,7 @@ public class GreeDiSecond extends Configured implements Tool {
   private String inputPath;
   private String docsSubsetPath;
   private String outputPath;
+  private String bucketsPath;
   private int selectCount;
 
   public GreeDiSecond() { }
@@ -132,7 +133,12 @@ public class GreeDiSecond extends Configured implements Tool {
     config.setOutputValueClass(IntWritable.class);
 
     config.setMapperClass(Map.class);
-    config.setReducerClass(GreeDiReducer.class);
+    if (bucketsPath != null) {
+      config.set(Fields.BUCKETS.get(), bucketsPath);
+      config.setReducerClass(GreeDiLshBucketsReducer.class);
+    } else {
+      config.setReducerClass(GreeDiReducer.class);
+    }
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
@@ -148,9 +154,12 @@ public class GreeDiSecond extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Tfidf vectors").create(Fields.INPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
-        .withDescription("Selected docs subset").create(Fields.DOCS_SUBSET.get()));
+        .withDescription("Selected docs subset")
+        .create(Fields.DOCS_SUBSET.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles").create(Fields.OUTPUT.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Buckets").create(Fields.BUCKETS.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
@@ -163,7 +172,8 @@ public class GreeDiSecond extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())
         || !cmdline.hasOption(Fields.DOCS_SUBSET.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
@@ -174,6 +184,7 @@ public class GreeDiSecond extends Configured implements Tool {
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
     docsSubsetPath = cmdline.getOptionValue(Fields.DOCS_SUBSET.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
+    bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
 
     selectCount = Defaults.SELECT_COUNT.get();
     if (cmdline.hasOption(Fields.SELECT_COUNT.get())) {
@@ -188,9 +199,10 @@ public class GreeDiSecond extends Configured implements Tool {
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
-    logger.info(" - docs: " + docsSubsetPath);
     logger.info(" - output: " + outputPath);
+    logger.info(" - buckets: " + bucketsPath);
     logger.info(" - select: " + selectCount);
+    logger.info(" - docs: " + docsSubsetPath);
 
     return 0;
   }

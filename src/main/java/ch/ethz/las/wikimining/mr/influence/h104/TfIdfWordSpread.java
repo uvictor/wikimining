@@ -73,7 +73,8 @@ public class TfIdfWordSpread extends Configured implements Tool {
         throws IOException {
       reporter.getCounter(Records.TOTAL).increment(1);
 
-      final int date = docDates.get(Integer.parseInt(docId.toString()));
+      final int id = Integer.parseInt(docId.toString());
+      final int date = docDates.get(id);
       output.collect(new IntWritable(date), value);
     }
   }

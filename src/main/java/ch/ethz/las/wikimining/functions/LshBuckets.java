@@ -7,9 +7,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Computes the word coverage as equation (1) from the paper, from a Mahout
- * index.
- * <p>
+ * Computes the LSH-buckets submodular function.
+ *
+ * Eg. F(S) = sum_i^#b{ concave(|S n B_i|) * |B_i| }
+ *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class LshBuckets implements ObjectiveFunction {
@@ -25,7 +26,8 @@ public class LshBuckets implements ObjectiveFunction {
 
   @Override
   /**
-   * F(S) = sum_i^#b{ concave(|S n B_i|) * |B_i| }
+   * F(S) = sum_i^#b{ g(|S n B_i|) / g(|Bi|) * |B_i| } / sum_i^#b |Bi|
+   * g concave (eg sqrt).
    */
   public double compute(Set<Integer> docIds) {
     assert docIds != null;
@@ -34,11 +36,14 @@ public class LshBuckets implements ObjectiveFunction {
     }
 
     double sum = 0;
+    double totalSize = 0;
     for (HashSet<Integer> bucket : buckets.values()) {
-      sum += concaveFunction(intersect(docIds, bucket)) * bucket.size();
+      sum += concaveFunction(intersect(docIds, bucket)) * (double) bucket.size()
+          / concaveFunction(bucket.size());
+      totalSize += bucket.size();
     }
 
-    return sum;
+    return sum / totalSize;
   }
 
   public double intersect(Set<Integer> docIds, Set<Integer> bucket) {

@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.ImportWiki;
+import ch.ethz.las.wikimining.evaluate.WikiDatabase;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.lucene.index.DirectoryReader;
@@ -18,13 +18,13 @@ import org.junit.Test;
  * @author uvictor
  */
 public class WordCoverageTest {
-  private static ImportWiki wiki;
+  private static WikiDatabase wiki;
   private IndexReader reader;
   private WordCoverageFromLucene wordCoverage;
 
   @BeforeClass
   public static void setUpClass() throws Exception {
-    wiki = new ImportWiki();
+    wiki = new WikiDatabase();
     wiki.initialiseAndIndexForTest();
   }
 
@@ -37,7 +37,7 @@ public class WordCoverageTest {
   public void setUp() throws Exception {
     reader = DirectoryReader.open(wiki.getIndexDir());
     wordCoverage =
-        new WordCoverageFromLucene(reader, ImportWiki.FieldNames.TEXT.toString());
+        new WordCoverageFromLucene(reader, WikiDatabase.FieldNames.TEXT.toString());
   }
 
   @After
@@ -95,7 +95,7 @@ public class WordCoverageTest {
     docsIds.add(1);
 
     final WordCoverageFromLuceneSlow wordCoverageSlow =
-        new WordCoverageFromLuceneSlow(reader, ImportWiki.FieldNames.TEXT.toString());
+        new WordCoverageFromLuceneSlow(reader, WikiDatabase.FieldNames.TEXT.toString());
     final double result = wordCoverage.compute(docsIds);
     final double resultSlow = wordCoverageSlow.compute(docsIds);
     assertEquals(resultSlow, result, 0.001);
@@ -109,7 +109,7 @@ public class WordCoverageTest {
     docsIds.add(10);
 
     final WordCoverageFromLuceneSlow wordCoverageSlow =
-        new WordCoverageFromLuceneSlow(reader, ImportWiki.FieldNames.TEXT.toString());
+        new WordCoverageFromLuceneSlow(reader, WikiDatabase.FieldNames.TEXT.toString());
     final double resultSlow = wordCoverageSlow.compute(docsIds);
     final double result = wordCoverage.compute(docsIds);
     assertEquals(result, resultSlow, 0.001);
