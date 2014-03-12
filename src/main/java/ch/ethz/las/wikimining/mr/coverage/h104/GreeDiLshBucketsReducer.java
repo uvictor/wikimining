@@ -70,7 +70,7 @@ public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
     final LshBuckets lshBuckets = new LshBuckets(buckets);
     logger.info("Created LshBuckets");
     final ObjectiveCombiner combiner = new ObjectiveCombiner(
-        Arrays.asList(1.25D, 1D), wordCoverage, lshBuckets);
+        Arrays.asList(1D, 1D), wordCoverage, lshBuckets);
 
     final SfoGreedyAlgorithm sfo =
         new SfoGreedyLazy(combiner, reporter);

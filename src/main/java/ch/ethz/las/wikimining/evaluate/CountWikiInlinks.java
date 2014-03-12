@@ -15,18 +15,10 @@ import org.apache.log4j.Logger;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-
-/**
- * Counts the citations of all selected document.
- *
- * @author Victor Ungureanu (uvictor@student.ethz.ch)
- */
 public class CountWikiInlinks {
 
   private final Logger logger;
-
   private final String selectedPath;
-
   private final Wikipedia wiki;
 
   public CountWikiInlinks(String theSelectedPath)
