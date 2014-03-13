@@ -1,6 +1,7 @@
 
 package ch.ethz.las.wikimining.evaluate;
 
+import de.tudarmstadt.ukp.wikipedia.api.Page;
 import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiInitializationException;
@@ -15,13 +16,13 @@ import org.apache.log4j.Logger;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class CountWikiInlinks {
+public class WikiCountInlinks {
 
   private final Logger logger;
   private final String selectedPath;
   private final Wikipedia wiki;
 
-  public CountWikiInlinks(String theSelectedPath)
+  public WikiCountInlinks(String theSelectedPath)
       throws WikiInitializationException {
     logger = Logger.getLogger(this.getClass());
 
@@ -37,7 +38,12 @@ public class CountWikiInlinks {
 
     try (Scanner scanner = new Scanner(new File(selectedPath))) {
       while (scanner.hasNextInt()) {
-        count += wiki.getPage(scanner.nextInt()).getNumberOfInlinks();
+        final Page page = wiki.getPage(scanner.nextInt());
+        final String title = page.getTitle().getWikiStyleTitle();
+        final int inlinks = page.getNumberOfInlinks();
+        System.out.println(title + "\t" + inlinks);
+
+        count += page.getNumberOfInlinks();
       }
     } catch (FileNotFoundException e) {
       logger.fatal("Problem reading selected file.", e);
@@ -49,7 +55,7 @@ public class CountWikiInlinks {
   }
 
   public static void main(String[] args) throws WikiInitializationException {
-    final CountWikiInlinks counter = new CountWikiInlinks((args[0]));
+    final WikiCountInlinks counter = new WikiCountInlinks((args[0]));
     System.out.println(counter.computeTotalCites());
   }
 }
