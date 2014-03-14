@@ -23,6 +23,8 @@ public enum Fields {
   ROWS("rows"),
   SELECT_COUNT("select"),
   WORD_SPREAD("spread"),
+  WORD_COUNT("wordCount"),
+  WORD_COUNT_TYPE("wordCountType"),
   ;
 
   private final String value;

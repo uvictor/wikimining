@@ -103,6 +103,8 @@ public class GreeDiSecond extends Configured implements Tool {
   private String inputPath;
   private String docsSubsetPath;
   private String outputPath;
+  private String wordCountPath;
+  private String wordCountType;
   private String bucketsPath;
   private int selectCount;
 
@@ -118,6 +120,8 @@ public class GreeDiSecond extends Configured implements Tool {
     JobConf config = new JobConf(getConf(), GreeDiSecond.class);
     config.setJobName(String.format("Coverage-GreeDiSecond[%s]", selectCount));
 
+    config.set(Fields.WORD_COUNT.get(), wordCountPath);
+    config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
     config.set(Fields.DOCS_SUBSET.get(), docsSubsetPath);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
@@ -157,6 +161,11 @@ public class GreeDiSecond extends Configured implements Tool {
         .withDescription("Selected docs subset")
         .create(Fields.DOCS_SUBSET.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Word counts").create(Fields.WORD_COUNT.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Word counts type")
+        .create(Fields.WORD_COUNT_TYPE.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Buckets").create(Fields.BUCKETS.get()));
@@ -184,6 +193,8 @@ public class GreeDiSecond extends Configured implements Tool {
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
     docsSubsetPath = cmdline.getOptionValue(Fields.DOCS_SUBSET.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
+    wordCountPath = cmdline.getOptionValue(Fields.WORD_COUNT.get());
+    wordCountType = cmdline.getOptionValue(Fields.WORD_COUNT_TYPE.get());
     bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
 
     selectCount = Defaults.SELECT_COUNT.get();
@@ -200,6 +211,8 @@ public class GreeDiSecond extends Configured implements Tool {
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
     logger.info(" - output: " + outputPath);
+    logger.info(" - wordCount: " + wordCountPath);
+    logger.info(" - wordCountType: " + wordCountType);
     logger.info(" - buckets: " + bucketsPath);
     logger.info(" - select: " + selectCount);
     logger.info(" - docs: " + docsSubsetPath);

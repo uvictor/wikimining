@@ -72,6 +72,8 @@ public class GreeDiFirst extends Configured implements Tool {
 
   private String inputPath;
   private String outputPath;
+  private String wordCountPath;
+  private String wordCountType;
   private String bucketsPath;
   private int partitionCount;
   private int selectCount;
@@ -89,6 +91,8 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setJobName(String.format(
         "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
 
+    config.set(Fields.WORD_COUNT.get(), wordCountPath);
+    config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
     config.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
@@ -127,9 +131,15 @@ public class GreeDiFirst extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected articles").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Word counts").create(Fields.WORD_COUNT.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Word counts type")
+        .create(Fields.WORD_COUNT_TYPE.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Buckets").create(Fields.BUCKETS.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
-        .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
+        .withDescription("Partition count")
+        .create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
@@ -142,7 +152,8 @@ public class GreeDiFirst extends Configured implements Tool {
       return -1;
     }
 
-    if (!cmdline.hasOption(Fields.INPUT.get()) || !cmdline.hasOption(Fields.OUTPUT.get())) {
+    if (!cmdline.hasOption(Fields.INPUT.get())
+        || !cmdline.hasOption(Fields.OUTPUT.get())) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp(this.getClass().getName(), options);
       ToolRunner.printGenericCommandUsage(System.out);
@@ -151,6 +162,8 @@ public class GreeDiFirst extends Configured implements Tool {
 
     inputPath = cmdline.getOptionValue(Fields.INPUT.get());
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
+    wordCountPath = cmdline.getOptionValue(Fields.WORD_COUNT.get());
+    wordCountType = cmdline.getOptionValue(Fields.WORD_COUNT_TYPE.get());
     bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
 
     partitionCount = Defaults.PARTITION_COUNT.get();
@@ -163,11 +176,14 @@ public class GreeDiFirst extends Configured implements Tool {
         return -1;
       }
     }
-    selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
+    selectCount =
+        Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 
     logger.info("Tool name: " + this.getClass().getName());
     logger.info(" - input: " + inputPath);
     logger.info(" - output: " + outputPath);
+    logger.info(" - wordCount: " + wordCountPath);
+    logger.info(" - wordCountType: " + wordCountType);
     logger.info(" - buckets: " + bucketsPath);
     logger.info(" - partitions: " + partitionCount);
     logger.info(" - select: " + selectCount);

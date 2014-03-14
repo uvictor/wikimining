@@ -3,6 +3,7 @@ package ch.ethz.las.wikimining.mr.coverage.h104;
 
 import ch.ethz.las.wikimining.functions.LshBuckets;
 import ch.ethz.las.wikimining.functions.ObjectiveCombiner;
+import ch.ethz.las.wikimining.functions.WeightedWordCoverage;
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
@@ -41,6 +42,7 @@ public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
       Logger.getLogger(GreeDiLshBucketsReducer.class);
 
   private HashMap<HashBandWritable, HashSet<Integer>> buckets;
+  private HashMap<Integer, Long> wordCount;
   private int selectCount;
 
   @Override
@@ -55,6 +57,7 @@ public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
       logger.fatal("Error loading buckets!", e);
     }
 
+    wordCount = GreeDiReducer.readWordCount(config);
     selectCount =
         config.getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
   }
@@ -65,7 +68,7 @@ public class GreeDiLshBucketsReducer extends MapReduceBase implements Reducer<
       OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
       throws IOException {
     final WordCoverageFromMahout wordCoverage =
-        new WordCoverageFromMahout(values);
+        new WeightedWordCoverage(wordCount, values);
     logger.info("Created WordCoverageFromMahout");
     final LshBuckets lshBuckets = new LshBuckets(buckets);
     logger.info("Created LshBuckets");

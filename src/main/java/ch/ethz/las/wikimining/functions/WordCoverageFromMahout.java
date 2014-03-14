@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
-import org.apache.mahout.math.function.Functions;
+import org.apache.mahout.math.Vector.Element;
 
 /**
- * Computes the word coverage as equation (1) from the paper, from a Mahout
- * index.
+ * Computes the word coverage as equation (1) from the paper with a constant
+ * word weight of one, from a Mahout index.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
@@ -27,6 +27,7 @@ public class WordCoverageFromMahout implements ObjectiveFunction {
    */
   public WordCoverageFromMahout(
       Iterable<DocumentWithVectorWritable> theDocuments) {
+    // TODO(uvictor): make the wordCount non-null to use it with Hadoop 2.0
     this(theDocuments.iterator());
   }
 
@@ -61,13 +62,27 @@ public class WordCoverageFromMahout implements ObjectiveFunction {
       return 0;
     }
 
-    // Max tf-idfs for all terms from the allDocIds documents.
+    return computeScore(getMaxScores(docIds));
+  }
+
+  /**
+   * Get max tf-idfs for each term for all docIds documents.
+   */
+  protected Vector getMaxScores(Set<Integer> docIds) {
     final int cardinality = documents.get(allDocIds.get(0)).size();
     final Vector maxScores = new RandomAccessSparseVector(cardinality);
-    for (Integer docId : docIds) {
-      maxScores.assign(documents.get(docId), Functions.MAX);
+    for (final Integer docId : docIds) {
+      for (final Element element : documents.get(docId).nonZeroes()) {
+        if (element.get() > maxScores.get(element.index())) {
+          maxScores.setQuick(element.index(), element.get());
+        }
+      }
     }
 
+    return maxScores;
+  }
+
+  protected double computeScore(Vector maxScores) {
     return maxScores.zSum() / maxScores.size();
   }
 }
