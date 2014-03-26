@@ -1,17 +1,21 @@
 
 package ch.ethz.las.wikimining.mr.coverage.h104;
 
+import ch.ethz.las.wikimining.functions.LshBuckets;
+import ch.ethz.las.wikimining.functions.ObjectiveCombiner;
 import ch.ethz.las.wikimining.functions.WeightedWordCoverage;
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
 import ch.ethz.las.wikimining.mr.base.Defaults;
 import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.mr.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.h104.FakeIntLongSequenceFileReader;
-import ch.ethz.las.wikimining.mr.utils.h104.IntLongSequenceFileReader;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.utils.h104.BucketsSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,22 +30,34 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.Logger;
 
 /**
- * Applies the SFO greedy algorithm for word coverage (eq 1) from a Mahout
- * index as a Reduce stage, part of the GreeDi protocol.
+ * Applies the SFO greedy algorithm for LSH buckets as a Reduce stage, part of
+ * the GreeDi protocol.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class GreeDiReducer extends MapReduceBase implements Reducer<
+public class LshBucketsGreeDiReducer extends MapReduceBase implements Reducer<
     IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
 
-  private static final Logger logger = Logger.getLogger(GreeDiReducer.class);
+  private static final Logger logger =
+      Logger.getLogger(LshBucketsGreeDiReducer.class);
 
+  private HashMap<HashBandWritable, HashSet<Integer>> buckets;
   private HashMap<Integer, Long> wordCount;
   private int selectCount;
 
   @Override
   public void configure(JobConf config) {
-    wordCount = readWordCount(config);
+    try {
+      final FileSystem fs = FileSystem.get(config);
+      final Path bucketsPath = new Path(config.get(Fields.BUCKETS.get()));
+      final BucketsSequenceFileReader bucketsReader =
+          new BucketsSequenceFileReader(bucketsPath, fs, config);
+      buckets = bucketsReader.processFile();
+    } catch (IOException e) {
+      logger.fatal("Error loading buckets!", e);
+    }
+
+    wordCount = CoverageGreeDiReducer.readWordCount(config);
     selectCount =
         config.getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
   }
@@ -51,51 +67,25 @@ public class GreeDiReducer extends MapReduceBase implements Reducer<
       Iterator<DocumentWithVectorWritable> values,
       OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
       throws IOException {
-    final WordCoverageFromMahout objectiveFunction;
-    if (wordCount == null) {
-      objectiveFunction = new WordCoverageFromMahout(values);
-    } else {
-      objectiveFunction = new WeightedWordCoverage(wordCount, values);
-    }
+    final WordCoverageFromMahout wordCoverage =
+        new WeightedWordCoverage(wordCount, values);
     logger.info("Created WordCoverageFromMahout");
+    final LshBuckets lshBuckets = new LshBuckets(buckets);
+    logger.info("Created LshBuckets");
+    final ObjectiveCombiner combiner = new ObjectiveCombiner(
+        Arrays.asList(1D, 1D), wordCoverage, lshBuckets);
 
     final SfoGreedyAlgorithm sfo =
-        new SfoGreedyLazy(objectiveFunction, reporter);
+        new SfoGreedyLazy(combiner, reporter);
     logger.info("Created SfoGreedyAlgorithm");
+
     Set<Integer> selected =
-        sfo.run(objectiveFunction.getAllDocIds(), selectCount);
+        sfo.run(wordCoverage.getAllDocIds(), selectCount);
     logger.info("Finished running SFO");
 
     for (Integer docId : selected) {
       IntWritable outValue = new IntWritable(docId);
       output.collect(NullWritable.get(), outValue);
     }
-  }
-
-  public static HashMap<Integer, Long> readWordCount(JobConf config) {
-    final String wordCountPath = config.get(Fields.WORD_COUNT.get());
-    if (wordCountPath == null) {
-      return null;
-    }
-
-    try {
-      final FileSystem fs = FileSystem.get(config);
-      final Path wordCountsPath = new Path(wordCountPath);
-
-      final IntLongSequenceFileReader bucketsReader;
-      if ("wc".equals(config.get(Fields.WORD_COUNT_TYPE.get()))) {
-        bucketsReader =
-            new FakeIntLongSequenceFileReader(wordCountsPath, fs, config);
-      } else {
-        bucketsReader =
-            new IntLongSequenceFileReader(wordCountsPath, fs, config);
-      }
-
-      return bucketsReader.processFile();
-    } catch (IOException e) {
-      logger.fatal("Error loading buckets!", e);
-    }
-
-    return null;
   }
 }

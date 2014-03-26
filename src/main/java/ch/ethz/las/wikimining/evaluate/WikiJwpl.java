@@ -17,9 +17,7 @@ public class WikiJwpl {
     database.initialiseWikiDatabase();
     final Wikipedia wiki = database.getWiki();
 
-    System.out.println(
-        "AI: " + wiki.getPage("Artificial_intelligence").getPageId());
-    System.out.println(
-        "ML: " + wiki.getPage("Machine_learning").getPageId());
+    System.out.println("in: " + wiki.getPage(12).getNumberOfInlinks()
+        + " out:" + wiki.getPage(12).getNumberOfOutlinks());
   }
 }

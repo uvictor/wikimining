@@ -2,7 +2,7 @@
 package ch.ethz.las.wikimining.sfo;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import org.apache.log4j.Logger;
 
@@ -78,7 +78,7 @@ public abstract class AbstractSfoGreedy implements SfoGreedyAlgorithm {
   }
 
   @Override
-  public Set<Integer> run(List<Integer> ids, int k) {
+  public Set<Integer> run(Collection<Integer> ids, int k) {
     logger.info("Scoring " + ids.size() + " elements.");
     computeInitialBestIds(ids);
 
@@ -87,7 +87,7 @@ public abstract class AbstractSfoGreedy implements SfoGreedyAlgorithm {
 
   protected abstract void computeInitialBestIds(int n);
 
-  protected abstract void computeInitialBestIds(List<Integer> ids);
+  protected abstract void computeInitialBestIds(Collection<Integer> ids);
 
   protected abstract Set<Integer> retrieveBestIds(int k);
 }

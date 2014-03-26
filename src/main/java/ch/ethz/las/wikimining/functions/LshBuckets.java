@@ -24,11 +24,11 @@ public class LshBuckets implements ObjectiveFunction {
     buckets = theBuckets;
   }
 
-  @Override
   /**
    * F(S) = sum_i^#b{ g(|S n B_i|) / g(|Bi|) * |B_i| } / sum_i^#b |Bi|
    * g concave (eg sqrt).
    */
+  @Override
   public double compute(Set<Integer> docIds) {
     assert docIds != null;
     if (docIds.isEmpty()) {

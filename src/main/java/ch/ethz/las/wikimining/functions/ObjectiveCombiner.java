@@ -22,6 +22,7 @@ public class ObjectiveCombiner implements ObjectiveFunction {
 
     weights = theWeights;
     functions = Arrays.asList(theFunctions);
+    System.out.println(functions.get(0) + " " + functions.get(1));
   }
 
   @Override

@@ -77,7 +77,7 @@ public class GreeDiSecond extends Configured implements Tool {
       final DocumentWithVectorWritable outValue =
           new DocumentWithVectorWritable(key, value);
 
-      // We use IntWritable only so that we can reuse GreeDiReducer.
+      // We use IntWritable only so that we can reuse CoverageGreeDiReducer.
       output.collect(zero, outValue);
     }
 
@@ -106,6 +106,7 @@ public class GreeDiSecond extends Configured implements Tool {
   private String wordCountPath;
   private String wordCountType;
   private String bucketsPath;
+  private String graphPath;
   private int selectCount;
 
   public GreeDiSecond() { }
@@ -120,8 +121,10 @@ public class GreeDiSecond extends Configured implements Tool {
     JobConf config = new JobConf(getConf(), GreeDiSecond.class);
     config.setJobName(String.format("Coverage-GreeDiSecond[%s]", selectCount));
 
-    config.set(Fields.WORD_COUNT.get(), wordCountPath);
-    config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
+    if (wordCountPath != null) {
+      config.set(Fields.WORD_COUNT.get(), wordCountPath);
+      config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
+    }
     config.set(Fields.DOCS_SUBSET.get(), docsSubsetPath);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
@@ -137,11 +140,18 @@ public class GreeDiSecond extends Configured implements Tool {
     config.setOutputValueClass(IntWritable.class);
 
     config.setMapperClass(Map.class);
+    if (wordCountPath != null) {
+      config.set(Fields.WORD_COUNT.get(), wordCountPath);
+      config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
+    }
     if (bucketsPath != null) {
       config.set(Fields.BUCKETS.get(), bucketsPath);
-      config.setReducerClass(GreeDiLshBucketsReducer.class);
+      config.setReducerClass(LshBucketsGreeDiReducer.class);
+    } else if (graphPath != null) {
+      config.set(Fields.GRAPH.get(), graphPath);
+      config.setReducerClass(GraphGreeDiReducer.class);
     } else {
-      config.setReducerClass(GreeDiReducer.class);
+      config.setReducerClass(CoverageGreeDiReducer.class);
     }
 
     // Delete the output directory if it exists already.
@@ -169,6 +179,8 @@ public class GreeDiSecond extends Configured implements Tool {
         .withDescription("Selected articles").create(Fields.OUTPUT.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Buckets").create(Fields.BUCKETS.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Graph").create(Fields.GRAPH.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
@@ -196,6 +208,7 @@ public class GreeDiSecond extends Configured implements Tool {
     wordCountPath = cmdline.getOptionValue(Fields.WORD_COUNT.get());
     wordCountType = cmdline.getOptionValue(Fields.WORD_COUNT_TYPE.get());
     bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
+    graphPath = cmdline.getOptionValue(Fields.GRAPH.get());
 
     selectCount = Defaults.SELECT_COUNT.get();
     if (cmdline.hasOption(Fields.SELECT_COUNT.get())) {
@@ -214,6 +227,7 @@ public class GreeDiSecond extends Configured implements Tool {
     logger.info(" - wordCount: " + wordCountPath);
     logger.info(" - wordCountType: " + wordCountType);
     logger.info(" - buckets: " + bucketsPath);
+    logger.info(" - graph: " + graphPath);
     logger.info(" - select: " + selectCount);
     logger.info(" - docs: " + docsSubsetPath);
 

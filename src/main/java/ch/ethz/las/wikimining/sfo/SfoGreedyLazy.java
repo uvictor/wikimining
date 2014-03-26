@@ -1,8 +1,8 @@
 package ch.ethz.las.wikimining.sfo;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
+import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 import org.apache.hadoop.mapred.Reporter;
@@ -46,7 +46,7 @@ public class SfoGreedyLazy extends AbstractSfoGreedy {
   }
 
   @Override
-  protected void computeInitialBestIds(List<Integer> ids) {
+  protected void computeInitialBestIds(Collection<Integer> ids) {
     setValueCounter(ProcessedArticles.INITIAL_TOTAL, ids.size());
     for (int id : ids) {
       scoreId(id);

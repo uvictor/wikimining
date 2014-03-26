@@ -2,10 +2,10 @@ package ch.ethz.las.wikimining.sfo;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -15,7 +15,7 @@ import java.util.Set;
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
 public class SfoGreedyStableLazy extends AbstractSfoGreedy {
-  
+
   private final Set<Integer> selected = new LinkedHashSet<>();
   private final ArrayList<ScoreId> bestIds = new ArrayList<>();
   private double currentScore;
@@ -32,7 +32,7 @@ public class SfoGreedyStableLazy extends AbstractSfoGreedy {
   }
 
   @Override
-  protected void computeInitialBestIds(List<Integer> ids) {
+  protected void computeInitialBestIds(Collection<Integer> ids) {
     for (int id : ids) {
       scoreId(id);
     }

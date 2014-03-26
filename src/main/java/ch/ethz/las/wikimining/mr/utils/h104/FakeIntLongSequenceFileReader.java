@@ -18,9 +18,12 @@ import org.apache.hadoop.util.ReflectionUtils;
  */
 public class FakeIntLongSequenceFileReader extends IntLongSequenceFileReader {
 
+  private int count;
+
   public FakeIntLongSequenceFileReader(
       Path thePath, FileSystem theFs, JobConf theConfig) {
     super(thePath, theFs, theConfig);
+    count = 0;
   }
 
   @Override
@@ -31,10 +34,9 @@ public class FakeIntLongSequenceFileReader extends IntLongSequenceFileReader {
         ReflectionUtils.newInstance(reader.getKeyClass(), config);
       LongWritable value = (LongWritable)
         ReflectionUtils.newInstance(reader.getValueClass(), config);
-      int i = 0;
       while (reader.next(key, value)) {
-        map.put(i, value.get());
-        i++;
+        map.put(count, value.get());
+        count++;
       }
     }
   }

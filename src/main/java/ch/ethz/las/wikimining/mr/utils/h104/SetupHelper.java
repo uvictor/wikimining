@@ -8,6 +8,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
 
 /**
@@ -27,6 +28,13 @@ public class SetupHelper {
   }
 
   private SetupHelper() { }
+
+  public SetupHelper setTextInput(JobConf config, String outputPath) {
+    TextInputFormat.addInputPath(config, new Path(outputPath));
+    config.setInputFormat(TextInputFormat.class);
+
+    return this;
+  }
 
   public SetupHelper setTextOutput(JobConf config, String outputPath) {
     TextOutputFormat.setOutputPath(config, new Path(outputPath));

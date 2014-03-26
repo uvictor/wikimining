@@ -6,8 +6,8 @@
 package ch.ethz.las.wikimining.sfo;
 
 import ch.ethz.las.wikimining.functions.ObjectiveFunction;
+import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -65,7 +65,7 @@ public class SfoGreedyNonLazy implements SfoGreedyAlgorithm {
    * @return the selected ids
    */
   @Override
-  public Set<Integer> run(List<Integer> ids, int k) {
+  public Set<Integer> run(Collection<Integer> ids, int k) {
     for (int i = 0; i < k; ++i) {
       maxScore = 0;
       maxId = -1;

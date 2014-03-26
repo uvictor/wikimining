@@ -75,6 +75,8 @@ public class GreeDiFirst extends Configured implements Tool {
   private String wordCountPath;
   private String wordCountType;
   private String bucketsPath;
+  private String graphPath;
+  private String revisionsPath;
   private int partitionCount;
   private int selectCount;
 
@@ -91,8 +93,6 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setJobName(String.format(
         "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
 
-    config.set(Fields.WORD_COUNT.get(), wordCountPath);
-    config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
     config.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
 
@@ -108,12 +108,22 @@ public class GreeDiFirst extends Configured implements Tool {
     config.setOutputValueClass(IntWritable.class);
 
     config.setMapperClass(Map.class);
+    if (wordCountPath != null) {
+      config.set(Fields.WORD_COUNT.get(), wordCountPath);
+      config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
+    }
     if (bucketsPath != null) {
       config.set(Fields.BUCKETS.get(), bucketsPath);
-      config.setReducerClass(GreeDiLshBucketsReducer.class);
-    } else {
-      config.setReducerClass(GreeDiReducer.class);
+      //config.setReducerClass(LshBucketsGreeDiReducer.class);
     }
+    if (graphPath != null) {
+      config.set(Fields.GRAPH.get(), graphPath);
+      //config.setReducerClass(CombinerGreeDiReducer.class);
+    }
+    if (revisionsPath != null) {
+      config.set(Fields.REVISIONS.get(), revisionsPath);
+    }
+    config.setReducerClass(CombinerGreeDiReducer.class);
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
@@ -137,6 +147,10 @@ public class GreeDiFirst extends Configured implements Tool {
         .create(Fields.WORD_COUNT_TYPE.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Buckets").create(Fields.BUCKETS.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Graph").create(Fields.GRAPH.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Revisions").create(Fields.REVISIONS.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Partition count")
         .create(Fields.PARTITION_COUNT.get()));
@@ -165,6 +179,8 @@ public class GreeDiFirst extends Configured implements Tool {
     wordCountPath = cmdline.getOptionValue(Fields.WORD_COUNT.get());
     wordCountType = cmdline.getOptionValue(Fields.WORD_COUNT_TYPE.get());
     bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
+    graphPath = cmdline.getOptionValue(Fields.GRAPH.get());
+    revisionsPath = cmdline.getOptionValue(Fields.REVISIONS.get());
 
     partitionCount = Defaults.PARTITION_COUNT.get();
     if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
@@ -185,6 +201,8 @@ public class GreeDiFirst extends Configured implements Tool {
     logger.info(" - wordCount: " + wordCountPath);
     logger.info(" - wordCountType: " + wordCountType);
     logger.info(" - buckets: " + bucketsPath);
+    logger.info(" - graph: " + graphPath);
+    logger.info(" - graph: " + revisionsPath);
     logger.info(" - partitions: " + partitionCount);
     logger.info(" - select: " + selectCount);
 

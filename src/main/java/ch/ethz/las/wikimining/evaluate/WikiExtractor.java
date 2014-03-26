@@ -9,7 +9,6 @@ import de.tudarmstadt.ukp.wikipedia.api.exception.WikiInitializationException;
 import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
@@ -24,11 +23,11 @@ public class WikiExtractor {
 
   private final Logger logger;
   private final String outputPath;
-  private SequenceFile.Writer writer;
+  private final SequenceFile.Writer writer;
   private final Wikipedia wiki;
 
   public WikiExtractor(String theOutputPath)
-      throws WikiInitializationException {
+      throws WikiInitializationException, IOException {
     logger = Logger.getLogger(this.getClass());
 
     outputPath = theOutputPath;
@@ -36,17 +35,15 @@ public class WikiExtractor {
     final WikiDatabase database = new WikiDatabase();
     database.initialiseWikiDatabase();
     wiki = database.getWiki();
-  }
-
-  public void extractCategoryRecursively(String title) throws IOException {
-    int count = 0;
 
     JobConf config = new JobConf();
     final Path path = new Path(outputPath);
     final FileSystem fs = FileSystem.get(config);
-    //writer = new SequenceFile.Writer(fs, config, path, Text.class, Text.class);
-    writer = new SequenceFile.Writer(
-        fs, config, path, IntWritable.class, IntWritable.class);
+    writer = new SequenceFile.Writer(fs, config, path, Text.class, Text.class);
+  }
+
+  public void extractCategoryRecursively(String title) {
+    int count = 0;
 
     try {
       final Category mainCategory = wiki.getCategory(title);
@@ -55,45 +52,54 @@ public class WikiExtractor {
         count += extractSingleCategory(category);
       }
     } catch (WikiApiException e) {
-      logger.fatal("Could not find category.", e);
+      logger.error("Could not find category.", e);
     }
 
-    writer.close();
     logger.warn("Extracted articles: " + count);
   }
 
-  public int extractSingleCategory(Category category) throws WikiApiException {
-    final int count = category.getNumberOfPages();
-    logger.warn("Found pages: " + count);
+  public int extractSingleCategory(Category category) {
+    try {
+      final int count = category.getNumberOfPages();
+      logger.warn("Found pages: " + count);
 
-    for (final Page page : category.getArticles()) {
-      extractText(page);
+      for (final Page page : category.getArticles()) {
+        extractText(page);
+      }
+
+      return count;
+    } catch (WikiApiException e) {
+      logger.error("Could not get articles", e);
     }
 
-    return count;
+    return 0;
   }
 
-  public void extractText(Page page) throws WikiApiException {
+  public void extractText(Page page) {
     try {
       writer.append(new Text(String.valueOf(page.getPageId())),
           new Text(page.getPlainText()));
     } catch (IOException e) {
-      logger.error("Count not write to file", e);
+      logger.error("Could not write to file", e);
+    } catch (WikiApiException e) {
+      logger.error("Could not get article plain text.", e);
     }
   }
 
-  /*public void extractDate(Page page) throws WikiApiException {
-    try {
-      writer.append(new IntWritable(page.getPageId()),
-          new IntWritable(page.));
-    } catch (IOException e) {
-      logger.error("Count not write to file", e);
-    }
-  }*/
+  public void close() throws IOException {
+    writer.close();
+  }
 
   public static void main(String[] args)
       throws WikiInitializationException, IOException {
     final WikiExtractor extractor = new WikiExtractor(args[0]);
-    extractor.extractCategoryRecursively("Machine learning");
+    /*extractor.extractCategoryRecursively("Machine learning");
+    extractor.extractCategoryRecursively("Game_artificial_intelligence");
+    extractor.extractCategoryRecursively("Vectors");
+    extractor.extractCategoryRecursively("Classical_composers");*/
+    for (int i = 1; i < args.length; i++) {
+      extractor.extractCategoryRecursively(args[i]);
+    }
+    extractor.close();
   }
 }

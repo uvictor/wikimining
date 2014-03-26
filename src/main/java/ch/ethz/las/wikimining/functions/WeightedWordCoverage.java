@@ -45,6 +45,6 @@ public class WeightedWordCoverage extends WordCoverageFromMahout {
   }
 
   private double concaveFunction(double value) {
-    return Math.log10(value);
+    return Math.sqrt(value);
   }
 }

@@ -6,7 +6,7 @@
 
 package ch.ethz.las.wikimining.sfo;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -33,5 +33,5 @@ public interface SfoGreedyAlgorithm {
    *
    * @return the selected ids
    */
-  public abstract Set<Integer> run(List<Integer> ids, int k);
+  public abstract Set<Integer> run(Collection<Integer> ids, int k);
 }
