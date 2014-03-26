@@ -1,0 +1,1 @@
+./mahout.sh streamingkmeans --input ../smallest/tfidf/tfidf-vectors --output ../smallest/stream-clusters --numClusters 100 --estimatedNumMapClusters 1300 --estimatedDistanceCutoff 0.01 --maxNumIterations 20 --trimFraction 0.9 --testProbability 0.2 --numBallKMeansRuns 1

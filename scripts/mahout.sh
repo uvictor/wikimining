@@ -1,11 +1,10 @@
 #!/bin/bash
 
-ORIGINAL_PATH="$PATH"
+source vars.sh
 
 # Mahout currently works only with Hadoop 1.x.x
-export PATH="$PATH:/home/uvictor/hadoop-1.0.4/bin:/home/uvictor/mahout/bin"
-
+export PATH=$MAHOUT_PATH
+echo $PATH
 mahout "$@"
-
 export PATH=$ORIGINAL_PATH
 
