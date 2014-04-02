@@ -1,0 +1,27 @@
+\begin{thebibliography}{1}
+
+\bibitem{bringhurst1996ets}
+Robert Bringhurst.
+\newblock {\em {The Elements of Typographic Style}}.
+\newblock Hartley \& Marks, 1996.
+
+\bibitem{krause2012submodular}
+Andreas Krause and Daniel Golovin.
+\newblock Submodular function maximization.
+\newblock {\em Tractability: Practical Approaches to Hard Problems}, 3, 2012.
+
+\bibitem{NIPS2013_5039}
+Baharan Mirzasoleiman, Amin Karbasi, Rik Sarkar, and Andreas Krause.
+\newblock Distributed submodular maximization: Identifying representative
+  elements in massive data.
+\newblock In C.J.C. Burges, L.~Bottou, M.~Welling, Z.~Ghahramani, and K.Q.
+  Weinberger, editors, {\em Advances in Neural Information Processing Systems
+  26}, pages 2049--2057. Curran Associates, Inc., 2013.
+
+\bibitem{nemhauser1978analysis}
+George~L Nemhauser, Laurence~A Wolsey, and Marshall~L Fisher.
+\newblock An analysis of approximations for maximizing submodular set
+  functions—i.
+\newblock {\em Mathematical Programming}, 14(1):265--294, 1978.
+
+\end{thebibliography}

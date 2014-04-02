@@ -1,0 +1,172 @@
+\chapter{Submodularity, coverage, summarisation}
+
+In this chapter we only provide an overview of what is submodularity, why it is
+useful and how it can be applied to summarisation. If you are interested in a
+deeper understanding of submodular functions and their many other use-cases,
+you can read survey \cite{krause2012submodular} on \emph{submodular function
+maximisation}.
+
+\section{Submodular functions}
+
+In this section we introduce what are submodular functions and why they are
+important. We also offer a couple of examples to shed some light on how these
+functions behave. Note that we will refer to these examples from some of the
+other sections.
+
+\subsection{Definitions}
+
+\begin{definition}[Submodularity]
+  \label{def:submodularity}
+  A set function \(f : 2^D \to \R\) is submodular iff
+  \(\forall S, T \text{ such that } S \subseteq T \subseteq D
+    \text{ and } \forall d \in D \setminus T\) we have
+  \[f(S \cup {d}) - f(S) \geq f(T \cup {d}) - f(T).\]
+\end{definition}
+Intuitively this means that a new element's impact can never be higher in the
+future than it currently is, an effect also knows as \emph{diminishing returns}.
+
+\begin{definition}[Monotonicity]
+  \label{def:monotonicity}
+  A set function \(f : 2^D \to \R\) is monotone iff
+  \(\forall S, T \text{ such that } S \subseteq T \subseteq D\) we have
+  \[f(S) \leq f(T).\]
+\end{definition}
+
+From Definition~\vref{def:submodularity} and Definition~\vref{def:monotonicity}
+we derive \cite{nemhauser1978analysis}:
+\begin{proposition}[Monotone submodular]
+  \label{def:mono-submod}
+  A set function \(f : 2^D \to \R\) is monotone submodular iff
+  \(\forall S, T \text{ such that } S \subseteq T \subseteq D
+    \text{ and } \forall d \in D\) we have
+  \[f(S \cup {d}) - f(S) \geq f(T \cup {d}) - f(T).\]
+\end{proposition}
+Note that in this case we also allow \(d \in T\).
+
+\missingfigure{Submodularity visual example}
+
+\subsection{Examples and properties}
+
+In this subsection we will discuss only monotone submodular functions --
+used in the other sections -- and some of the submodular functions'
+properties.
+
+Let \(\D\) be a universe, \(A_1, A_2, \ldots, A_n \subseteq \D\) and \(D = {1,
+2, \dots, n}\). We can define several functions \(f : 2^D -> \R\) that are
+monotone submodular. \todo{Citation needed / Stanford-lec16.pdf}
+\begin{definition}[Set coverage function]
+  \label{def:set-coverage}
+  \(f(S) = |\bigcup_{i \in S} D_i|\).
+\end{definition}
+More generally we can extend the above function as follows.
+\begin{definition}[Weighted set coverage function]
+  \label{def:weighted-coverage}
+  Let \(w : \D \to \R_+\) be a non-negative weight function. \\
+  Then \(f(S) = w(|\bigcup_{i \in S} D_i|)\).
+\end{definition}
+This differs from Definition~\vref{def:set-coverage} in that we can sum
+non-constant weights that depend on the selected elements. From this we can
+define a more complex, but very useful monotone submodular function that we will
+use in Section~\vref{sec:word-coverage}.
+\begin{definition}[More general weighted set coverage function]
+  \label{def:-coverage}
+  Then \(f(S) = w(|\bigcup_{i \in S} D_i|)\).
+  \todo{Simplify these functions}
+\end{definition}
+
+A very useful property of submodular functions is that the class of submodular
+functions is closed under non-negative linear combinations. \todo{Citation
+needed}
+\begin{proposition}[Closedness under non-negative linear combinations]
+  Let \(g_1, g_2, \ldots, g_n : 2^D \to \R \) be submodular functions and \(\lambda_1, \lambda_2, \ldots, \lambda_n \in \R_+\). \\
+  Then
+  \[f(S) = \sum_{i=1}^n \lambda_i g_i(S)\]
+  is submodular.
+\end{proposition}
+This property is important because it allows us to easily construct new
+submodular function by combining multiple simpler submodular functions.
+
+\section{Submodular function maximisation}
+
+\subsection{Problem statement}
+
+Given a submodular function \(f\) we are interested in maximising its value on
+set \(S\) given some constraints on \(S\). A common constraint on \(S\) is the
+\emph{cardinality constraint} which limits the size of set \(S\). Formally,
+we are interested in computing:
+\begin{equation}
+  \label{eq:submod-max}
+  \max_{S \subseteq D} f(S) \text{ subject to } |S| \leq k, \text{ for some } k
+\end{equation}
+Most of the time we are actually interested in computing the set \(S\) that
+maximises our function \(f\), so Equation~\vref{eq:submod-max} becomes:
+\begin{equation}
+  \label{eq:submod-argmax}
+  \argmax_{S \subseteq D} f(S) \text{ subject to } |S| \leq k, \text{ for some
+  } k
+\end{equation}
+
+\subsection{Greedy maximisation}
+Optimally solving Equations~\vref{eq:submod-max},~\vref{eq:submod-argmax} for
+some function \(f\) is \emph{NP-hard} \todo{Citation needed / Feige, 1998}.
+\begin{algorithm}
+  \caption{Greedy submodular function maximisation}
+  \label{alg:greedy-max}
+  \begin{algorithmic}
+    \STATE \(S \gets \emptyset\)
+    \WHILE{\(|S| < k\)}
+      \STATE \(d^* \gets \argmax_{d \in D} f(S \cup {d}) - f(S)\)
+      \STATE \(S \gets S \cup {d^*}\)
+    \ENDWHILE
+    Answer \(S\)
+  \end{algorithmic}
+\end{algorithm}
+Fortunately, we can devise a \emph{greedy algorithm} that is at most \(1 - 1 /
+e\) worse than the best solution for maximising a fixed monotone submodular
+function \(f\) \cite{nemhauser1978analysis}. We present the required steps in
+Algorithm~\vref{alg:greedy-max}.
+
+\subsection{GreeDi protocol}
+Given that in this thesis we are interested in applying submodular function
+maximisation to a large corpus we need to find a way to transform the
+sequential Algorithm~\vref{alg:greedy-max} to run distributively. Fortunately,
+there exists a \emph{greedy distributed submodular maximisation} protocol
+described in Algorithm~\vref{alg:greedi-dist} that partitions the data into
+subsets and then runs Algorithm~\vref{alg:greedy-max} on each individual
+partition. This approach has the benefit that it gracefully degrades the
+approximation guarantees based on the number of partitions and, more
+importantly, for many types of data it offers approximation guarantees close to
+the ones offered by the sequential version, also with great experimental
+results \cite{NIPS2013_5039} -- results that are almost identical or very
+similar to the sequential algorithm.
+\begin{algorithm}
+  \caption{Greedy Distributed Submodular Maximisation (GreeDi).
+      Adapted from \cite{NIPS2013_5039} with \(l = k\)}
+  \label{alg:greedi-dist}
+  \begin{algorithmic}
+    \STATE \(D := \)set of all elements
+    \STATE \(p := \)number of partitions
+    \STATE \(k := \)number of selected elements
+  \end{algorithmic}
+  \begin{algorithmic}[1]
+    \STATE Partition \(D\) into \(p\) sets: \(D_1, D_2, \ldots, D_p\)
+    \STATE Run Greedy Algorithm~\ref{alg:greedy-max} on each set \(D_i\) to
+        select \(k\) elements in \(T_i\)
+    \STATE Merge the answers: \(T = \bigcup_{i=1}^p T_i\)
+    \STATE Run Greedy Algorithm~\ref{alg:greedy-max} on T to select the final
+        \(k\) elements in \(S\)
+    \STATE Answer \(S\)
+  \end{algorithmic}
+\end{algorithm}
+
+\section{Word coverage}
+\label{sec:word-coverage}
+
+Dummy text.
+
+\section{Document influence}
+\label{sec:doc-influence}
+
+Dummy text.
+
+Dummy text.
