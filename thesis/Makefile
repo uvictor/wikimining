@@ -51,7 +51,7 @@ thesis.bbl: thesis.aux
 clean:
 	rm -rf build/
 	rm -f *.aux
-	rm -f thesis.dvi thesis.idx thesis.ind thesis.ilg thesis.out thesis.toc thesis.pdf thesis.log
+	rm -f thesis.dvi thesis.idx thesis.ind thesis.ilg thesis.out thesis.toc thesis.pdf thesis.log thesis.bbl thesis.blg thesis.ps thesis.thm
 
 archive: thesis-template.zip
 
