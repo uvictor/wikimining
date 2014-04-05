@@ -1,6 +1,7 @@
 \chapter{Submodularity, coverage, summarisation}
+\label{cap:submodularity}
 
-In this chapter we only provide an overview of what is submodularity, why it is
+In this chapter we only provide an overview of what submodularity is, why it is
 useful and how it can be applied to summarisation. If you are interested in a
 deeper understanding of submodular functions and their many other use-cases,
 you can read survey \cite{krause2012submodular} on \emph{submodular function
@@ -32,7 +33,7 @@ future than it currently is, an effect also knows as \emph{diminishing returns}.
   \[f(S) \leq f(T).\]
 \end{definition}
 
-From Definition~\vref{def:submodularity} and Definition~\vref{def:monotonicity}
+From Definition~\ref{def:submodularity} and Definition~\ref{def:monotonicity}
 we derive \cite{nemhauser1978analysis}:
 \begin{proposition}[Monotone submodular]
   \label{def:mono-submod}
@@ -56,21 +57,21 @@ Let \(\D\) be a universe, \(A_1, A_2, \ldots, A_n \subseteq \D\) and \(D = {1,
 monotone submodular. \todo{Citation needed / Stanford-lec16.pdf}
 \begin{definition}[Set coverage function]
   \label{def:set-coverage}
-  \(f(S) = |\bigcup_{i \in S} D_i|\).
+  \(f(S) := |\bigcup_{i \in S} D_i|\).
 \end{definition}
 More generally we can extend the above function as follows.
 \begin{definition}[Weighted set coverage function]
   \label{def:weighted-coverage}
   Let \(w : \D \to \R_+\) be a non-negative weight function. \\
-  Then \(f(S) = w(|\bigcup_{i \in S} D_i|)\).
+  Then \(f(S) := w(|\bigcup_{i \in S} D_i|)\).
 \end{definition}
-This differs from Definition~\vref{def:set-coverage} in that we can sum
+This differs from Definition~\ref{def:set-coverage} in that we can sum
 non-constant weights that depend on the selected elements. From this we can
 define a more complex, but very useful monotone submodular function that we will
-use in Section~\vref{sec:word-coverage}.
+use in Section~\ref{sec:word-coverage}.
 \begin{definition}[More general weighted set coverage function]
   \label{def:-coverage}
-  Then \(f(S) = w(|\bigcup_{i \in S} D_i|)\).
+  Then \(f(S) := w(|\bigcup_{i \in S} D_i|)\).
   \todo{Simplify these functions}
 \end{definition}
 
@@ -80,7 +81,7 @@ needed}
 \begin{proposition}[Closedness under non-negative linear combinations]
   Let \(g_1, g_2, \ldots, g_n : 2^D \to \R \) be submodular functions and \(\lambda_1, \lambda_2, \ldots, \lambda_n \in \R_+\). \\
   Then
-  \[f(S) = \sum_{i=1}^n \lambda_i g_i(S)\]
+  \[f(S) := \sum_{i=1}^n \lambda_i g_i(S)\]
   is submodular.
 \end{proposition}
 This property is important because it allows us to easily construct new
@@ -99,7 +100,7 @@ we are interested in computing:
   \max_{S \subseteq D} f(S) \text{ subject to } |S| \leq k, \text{ for some } k
 \end{equation}
 Most of the time we are actually interested in computing the set \(S\) that
-maximises our function \(f\), so Equation~\vref{eq:submod-max} becomes:
+maximises our function \(f\), so Equation~\ref{eq:submod-max} becomes:
 \begin{equation}
   \label{eq:submod-argmax}
   \argmax_{S \subseteq D} f(S) \text{ subject to } |S| \leq k, \text{ for some
@@ -107,7 +108,7 @@ maximises our function \(f\), so Equation~\vref{eq:submod-max} becomes:
 \end{equation}
 
 \subsection{Greedy maximisation}
-Optimally solving Equations~\vref{eq:submod-max},~\vref{eq:submod-argmax} for
+Optimally solving Equations~\ref{eq:submod-max},~\ref{eq:submod-argmax} for
 some function \(f\) is \emph{NP-hard} \todo{Citation needed / Feige, 1998}.
 \begin{algorithm}
   \caption{Greedy submodular function maximisation}
@@ -124,24 +125,24 @@ some function \(f\) is \emph{NP-hard} \todo{Citation needed / Feige, 1998}.
 Fortunately, we can devise a \emph{greedy algorithm} that is at most \(1 - 1 /
 e\) worse than the best solution for maximising a fixed monotone submodular
 function \(f\) \cite{nemhauser1978analysis}. We present the required steps in
-Algorithm~\vref{alg:greedy-max}.
+Algorithm~\ref{alg:greedy-max}.
 
 \subsection{GreeDi protocol}
 Given that in this thesis we are interested in applying submodular function
 maximisation to a large corpus we need to find a way to transform the
-sequential Algorithm~\vref{alg:greedy-max} to run distributively. Fortunately,
+sequential Algorithm~\ref{alg:greedy-max} to run distributively. Fortunately,
 there exists a \emph{greedy distributed submodular maximisation} protocol
-described in Algorithm~\vref{alg:greedi-dist} that partitions the data into
-subsets and then runs Algorithm~\vref{alg:greedy-max} on each individual
+described in Algorithm~\ref{alg:greedi-dist} that partitions the data into
+subsets and then runs Algorithm~\ref{alg:greedy-max} on each individual
 partition. This approach has the benefit that it gracefully degrades the
 approximation guarantees based on the number of partitions and, more
 importantly, for many types of data it offers approximation guarantees close to
 the ones offered by the sequential version, also with great experimental
-results \cite{NIPS2013_5039} -- results that are almost identical or very
+results \cite{mirzasoleiman2013distributed} -- results that are almost identical or very
 similar to the sequential algorithm.
 \begin{algorithm}
   \caption{Greedy Distributed Submodular Maximisation (GreeDi).
-      Adapted from \cite{NIPS2013_5039} with \(l = k\)}
+      Adapted from \cite{mirzasoleiman2013distributed} with \(l = k\)}
   \label{alg:greedi-dist}
   \begin{algorithmic}
     \STATE \(D := \)set of all elements
@@ -162,11 +163,60 @@ similar to the sequential algorithm.
 \section{Word coverage}
 \label{sec:word-coverage}
 
-Dummy text.
+One of the basic ways of finding significant multi-document summaries is to
+find a good measure for a document's \emph{information coverage}. One such
+proposed metric is \emph{word coverage}, a method which argues that covering
+words is a good indication of covering information. This method has been used
+before in document summarisation and it extends naturally to multi-document
+summarisation \cite{sipos2012temporal}.
+
+\subsection{Definition}
+
+Sipos et al \cite{sipos2012temporal} propose a way to adapt a known submodular
+function to use word coverage as a information measure. We define this function
+in Definition~\ref{def:word-coverage}.
+\begin{definition}[Word coverage]
+  \label{def:word-coverage}
+  Let:
+  \begin{align*}
+    &D \text{ be a set of documents, } \\
+    &W \text{ be a set of all words from all documents in \(D\).}
+  \end{align*}
+  Then we define:
+  \begin{align*}
+    &f : 2^D \to \R_+ \\
+    &f(S) := \sum_{w \in W} \theta(w) \max_{d \in S} \phi(d, w)
+    \,(\forall S \subseteq D)
+  \end{align*}
+  where:
+  \begin{align*}
+    &\theta : W \to \R_+ \text{ represents the importance of word \(w\),} \\
+    &\phi : D \times W \to \R_+ \text{ represents the coverage of word \(w\) in
+    document \(d\) and it is usually chosen to be tf-idf\((d, w)\).}
+  \end{align*}
+\end{definition}
+Remember that we described term-frequency--inverted-document-frequency
+(tf-idf) in Section~\todo{Preliminaries}.
+
+\begin{proposition}
+  Function \(f\) from Definition~\ref{def:word-coverage} is monotone submodular.
+  \todo{proof: paper / paper ref [8] ?}
+\end{proposition}
+
+\subsection{Rationale}
+
+The word coverage function defined in Definition~\vref{def:word-coverage}
+promotes word diversity while trying to minimize eccentricity. Intuitively,
+maximising \(\phi(d, w\), seen as tf-idf, prefers selecting documents that have
+a lot of words rarer in the other documents. This promotes diversity, but also
+increases the eccentricity of the selected documents. To dampen the
+eccentricity of picked documents we introduce \(\theta(w)\) so that we include
+the importance of the word in the selection process. This will counterbalance
+the eccentricity of words by preferring more common significant
+words\footnote{Not to be confused with stop words.}.
 
 \section{Document influence}
 \label{sec:doc-influence}
 
 Dummy text.
 
-Dummy text.

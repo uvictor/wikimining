@@ -5,23 +5,40 @@ Robert Bringhurst.
 \newblock {\em {The Elements of Typographic Style}}.
 \newblock Hartley \& Marks, 1996.
 
+\bibitem{dean2008mapreduce}
+Jeffrey Dean and Sanjay Ghemawat.
+\newblock Mapreduce: simplified data processing on large clusters.
+\newblock {\em Communications of the ACM}, 51(1):107--113, 2008.
+
 \bibitem{krause2012submodular}
 Andreas Krause and Daniel Golovin.
 \newblock Submodular function maximization.
 \newblock {\em Tractability: Practical Approaches to Hard Problems}, 3, 2012.
 
-\bibitem{NIPS2013_5039}
+\bibitem{mirzasoleiman2013distributed}
 Baharan Mirzasoleiman, Amin Karbasi, Rik Sarkar, and Andreas Krause.
 \newblock Distributed submodular maximization: Identifying representative
   elements in massive data.
-\newblock In C.J.C. Burges, L.~Bottou, M.~Welling, Z.~Ghahramani, and K.Q.
-  Weinberger, editors, {\em Advances in Neural Information Processing Systems
-  26}, pages 2049--2057. Curran Associates, Inc., 2013.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  2049--2057, 2013.
 
 \bibitem{nemhauser1978analysis}
 George~L Nemhauser, Laurence~A Wolsey, and Marshall~L Fisher.
 \newblock An analysis of approximations for maximizing submodular set
   functions—i.
 \newblock {\em Mathematical Programming}, 14(1):265--294, 1978.
+
+\bibitem{sipos2012temporal}
+Ruben Sipos, Adith Swaminathan, Pannaga Shivaswamy, and Thorsten Joachims.
+\newblock Temporal corpus summarization using submodular word coverage.
+\newblock In {\em Proceedings of the 21st ACM international conference on
+  Information and knowledge management}, pages 754--763. ACM, 2012.
+
+\bibitem{zesch2008jwpl}
+Torsten Zesch, Christof M{\"u}ller, and Iryna Gurevych.
+\newblock Extracting lexical semantic knowledge from wikipedia and wiktionary.
+\newblock In {\em Proceedings of the 6th International Conference on Language
+  Resources and Evaluation}, Marrakech, Morocco, May 2008.
+\newblock electronic proceedings.
 
 \end{thebibliography}

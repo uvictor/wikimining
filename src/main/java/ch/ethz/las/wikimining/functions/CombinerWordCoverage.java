@@ -63,7 +63,7 @@ public class CombinerWordCoverage extends WeightedWordCoverage {
         revisionsCount = 1 + revisions.get(docId).get(0);
         revisionsVolume = 1 + revisions.get(docId).get(1);
       }
-      final double revisionsValue = revisionsCount;// * Math.log(revisionsVolume);
+      final double revisionsValue = revisionsCount * Math.log(revisionsVolume);
 
       for (final Vector.Element element : documents.get(docId).nonZeroes()) {
         final double value = element.get() * inlinks * revisionsValue;

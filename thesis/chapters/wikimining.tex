@@ -1,0 +1,116 @@
+\chapter{WikiMining framework design}
+
+Dummy text.
+
+\section{External libraries}
+
+Dummy text.
+
+\subsection{Java Wikipedia Library}
+
+\ac{JWPL} is an open-source library that facilitates access to a lot of
+information concerning Wikipedia including, but not limited to:
+\begin{itemize}
+  \item page link graph
+  \item category link graph
+  \item page \(leftrightarrow\) category link graph
+  \item page content (MediaWiki and plain-text formats)
+\end{itemize}
+
+\paragraph{How it works?} Given a Wikipedia dump - that can be downloaded from
+\todo{http://dumps.wikimedia.org/} - it generates \(11\) text files that can
+then be imported into a MySQL databased and accessed through the \ac{JWPL}
+\ac{API}. You can find more details about using \ac{JWPL} on their website
+\todo{https://code.google.com/p/jwpl/wiki/DataMachine}.
+
+\paragraph{Technical Details} The library is publicly available
+\todo{https://code.google.com/p/jwpl/} and its authors wrote a paper
+\cite{zesch2008jwpl} providing further insights into its inner workings. For the
+purposes of this thesis we use \emph{\ac{JWPL} 0.9.2}.
+
+\subsection{Hadoop}
+
+\emph{Hadoop} is an open-source project that aims to offer solutions for
+'reliable, scalable, distributed computing' \todo{http://hadoop.apache.org/}.
+Although the whole system is more complex we mainly use two of its components:
+\begin{itemize}
+  \item \acl{MR}
+  \item \acl{HDFS}
+\end{itemize}
+
+\subsubsection{MapReduce}
+
+\acf{MR} is a two-phase process that borrows two concepts from functional
+programming:
+\begin{itemize}
+  \item map;
+  \item reduce;
+\end{itemize}
+and applies them to distributed computing.
+The main steps are as follows:
+\begin{enumerate}
+  \item In the first stage - the map stage - the data is partitioned and spread
+  across multiple processes that perform the same task and output multiple
+  (key, value) pairs.
+  \item In-between the two phases, the results from the first stage are
+  collected and sorted by key in a distributed fashion.
+  \item In the second stage - the reduce stage - all pairs that share the same
+  key are sent to the same process and this task outputs a results based on the
+  received pairs (that share the same key).
+\end{enumerate}
+\acf{MR} is a very powerful technique for doing distributed computations
+because it provides an easy way to write distributed code that is both
+fault-tolerant and free from other distributed computing problems (such as
+synchronisation concerns, deadlocks etc.).
+If you are interested in learning more about \acf{MR} we recommend reading the
+paper \cite{dean2008mapreduce} written by its proponents.
+\missingfigure{MapReduce stages}
+
+\subsubsection{Hadoop Distributed File System}
+
+\acf{HDFS} is, as it name says, a distributed file-system that offers the
+file-system back-end for writing \acl{MR} jobs and using other Hadoop-based
+frameworks. Its purpose is to store large-scale data reliably and
+distributively such that it can be easy to stream this data at a high bandwidth
+to applications running on multiple machines \cite{shvachko2010hadoop}.
+
+For the purposes of this thesis we use \emph{Hadoop 1.0.4}.
+
+\subsection{Mahout}
+
+\emph{Mahout} is scalable machine learning library designed to run over very large data sets using Hadoop \acl{MR}.
+
+\missingfigure{Architecture from http://www.slideshare.net/VaradMeru/introduction-to-mahout-and-machine-learning ?}
+
+\section{System architecture}
+
+Dummy text.
+
+\subsection{Base data types}
+
+Dummy text.
+
+\subsection{Submodular functions}
+
+Dummy text.
+
+\subsection{Submodular function maximisation}
+
+Dummy text.
+
+\subsection{Selection and evaluation}
+
+Dummy text.
+
+\subsection{Coverage algorithms}
+
+Dummy text.
+
+\subsection{Influence algorithms}
+
+Dummy text.
+
+\subsection{Input, output}
+
+Dummy text.
+

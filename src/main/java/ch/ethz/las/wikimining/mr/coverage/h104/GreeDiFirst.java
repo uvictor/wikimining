@@ -112,7 +112,7 @@ public class GreeDiFirst extends Configured implements Tool {
       config.set(Fields.WORD_COUNT.get(), wordCountPath);
       config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
     }
-    if (bucketsPath != null) {
+    /*if (bucketsPath != null) {
       config.set(Fields.BUCKETS.get(), bucketsPath);
       //config.setReducerClass(LshBucketsGreeDiReducer.class);
     }
@@ -123,7 +123,16 @@ public class GreeDiFirst extends Configured implements Tool {
     if (revisionsPath != null) {
       config.set(Fields.REVISIONS.get(), revisionsPath);
     }
-    config.setReducerClass(CombinerGreeDiReducer.class);
+    config.setReducerClass(CombinerGreeDiReducer.class);*/
+    if (bucketsPath != null) {
+      config.set(Fields.BUCKETS.get(), bucketsPath);
+      config.setReducerClass(LshBucketsGreeDiReducer.class);
+    } else if (graphPath != null) {
+      config.set(Fields.GRAPH.get(), graphPath);
+      config.setReducerClass(GraphGreeDiReducer.class);
+    } else {
+      config.setReducerClass(CoverageGreeDiReducer.class);
+    }
 
     // Delete the output directory if it exists already.
     FileSystem.get(getConf()).delete(new Path(outputPath), true);
