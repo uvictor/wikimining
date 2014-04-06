@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Object that implements a brute-force (not-lazy) greedy submodular function
+ * Object that implements a brute-force (non-lazy) greedy submodular function
  * maximisation (SFO) algorithm.
  * <p>
  * @author Victor Ungureanu (uvictor@student.ethz.ch)

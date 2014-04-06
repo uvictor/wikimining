@@ -24,7 +24,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- * Converts a list of edges to a edge list for each node.
+ * Converts a list of edges to an inlinks adjacency list.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Objects that computes the maximum cut value given the graph split.
+ * Computes the maximum cut value given the graph split.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */

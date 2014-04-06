@@ -152,22 +152,141 @@ We use the following data type classes, defined in package
 In addition we have two classes for:
 \begin{itemize}
   \item storing the default parameters - \emph{Defaults}
-  \item defining the different program arguments - \emph{Fields}
+  \item defining the program arguments - \emph{Fields}
 \end{itemize}
 
 \subsection{Submodular functions}
 
-Dummy text.
+Given that the \emph{GreeDi} protocol has only general, high-level restrictions
+(such as being able to partition the data for example), we can easily implement
+submodular functions similarly to implementing them in other programming
+language. Also the \emph{submodular function maximisation} algorithms are
+implemented such that they can correctly work with any submodular function that
+extends the \emph{ObjectiveFunction} interface - which is very non-restrictive.
+
+WikiMining provides the following submodular functions package
+\emph{ch.ethz.las.wikimining.functions}:
+\begin{description}
+  \item[CombinerWordCoverage] Implements the function described in
+  Section~\vref{sec:word-coverage++}, whose \emph{coverage of a word} function
+  uses \emph{tf-idf}, \emph{number of inlinks}, \emph{number of revisions} and
+  \emph{revision volume}.
+  \item[CutFunction] Given a graph split, it compute the maximum cut value. It
+  is not used with Wikipedia, but instead we used it to test our implementation
+  correctness against the \emph{SFO Matlab toolbox} \cite{krause2010sfo}.
+  \item[DocumentInfluence] Computes the \emph{influence of a document} as
+  described in Sections~ \todo{4.d.Doc Infl, 5.e.Scaling doc infl}, given the
+  \emph{document creation dates}, a \emph{document novelty} index and a
+  \emph{yearly word spread} index.
+  \item[GraphCoverage] Computes the \emph{graph coverage} described in
+  Section~\vref{sec:graph-coverage}, given the graph as an \emph{adjacency
+  list}.
+  \item[LSHBuckets] Computes the \emph{\ac{LSH}-buckets} function described in
+  Section~ \todo{5.d Lsh buckets}, given the \ac{LSH} buckets.
+  \item[ObjectiveCombiner] Linearly combines multiple objective functions as
+  described in Section~ \todo{5.f. Combining multiple subm fn}, given a list of
+  functions and weights.
+  \item[RevisionsSummer] A \emph{modular} function that just sums the number of
+  revisions of each selected document.
+  \item[WeightedWordCoverage] Implements the \emph{word coverage} function
+  where:
+    \begin{itemize}
+      \item \emph{word importance} is defined as in
+      Section~\vref{sec:word-coverage++};
+      \item \emph{coverage of a word} uses just the \emph{tf-idf} as described
+      in Section~\vref{sec:word-coverage};
+    \end{itemize}
+  \item[WordCoverageFromMahout] Implements the same \emph{word coverage}
+  function as above (WeightedWordCoverage), except that it ignores the
+  \emph{word importance}, considered to be a \emph{constant \(1\)}.
+\end{description}
+All functions that need the \emph{tf-idf} vectors expect them as a
+\emph{HashMap} from \emph{document ids} to \emph{Mahout Vectors}.
+
+If you are interested in implementing your own submodular functions, you just
+need to implement the \emph{ObjectiveFunction} interface such that your class
+provides a \emph{compute} method which returns the \emph{double} score of a set
+of \emph{document ids}.
 
 \subsection{Submodular function maximisation}
 
-Dummy text.
+WikiMining provides three types of greedy \acf{SFO} algorithms in package
+\emph{ch.ethz.las.wikimining.sfo}:
+\begin{description}
+  \item[SfoGreedyLazy] Implements a lazy greedy \ac{SFO} algorithm that uses a
+  non-stable sorting mechanism, that is a heap, to speed-up the computations as
+  described in section/paper \todo{4.b.sf max}. This is the only maximisation
+  algorithm that we use in all our non-testing code. It has a complexity of
+  \(O(k \cdot N\), where \(k\) is the average number times the current maximum
+  score is not the real maximum score \todo{Check this complexity}.
+  \item[SfoGreedyNonLazy] Implements a brute-force (non-lazy) - it tries all
+  possible documents at each iteration - greedy \ac{SFO} algorithm as described
+  in section/paper \todo{4.b.sf max}.
+  \item[SfoGreedyStableLazy] Implements a stable-sort lazy greedy \ac{SFO}
+  algorithm. The complexity of this algorithm is the same as of the non-lazy
+  version: \(O(N)\), so it isn't really useful, but we used it for testing and
+  debugging.
+\end{description}
 
-\subsection{Coverage algorithms}
+If you need to implement your own \acl{SFO} algorithm you would need to
+implement the \emph{SfoGreedyAlgorithm} interface such that your class provides
+the two synonymous \emph{run} methods which take a \emph{list of ids} and the
+\emph{number of elements to select} and return the \emph{selected document
+ids}. Instead, if you are interested in using more of our already implemented
+code and structure you can consider extending the \emph{AbstractSfoGreedy}
+abstract class that provides you with \emph{score, document id} pair.
 
-Dummy text.
+\subsection{Coverage \aclp{MR}}
 
-\subsection{Influence algorithms}
+This part refers to the three categories of classes that deal with coverage,
+found in package \emph{ch.ethz.las.wikimining.mr.coverage.h104}:
+\begin{enumerate}
+  \item preprocessing classes;
+  \item GreeDi protocol classes;
+  \item reducer classes.
+\end{enumerate}
+
+The preprocessing classes are as follows:
+\begin{description}
+  \item[GraphEdgesConvertor] Converts a plain-text \emph{list of edges} to an
+  \emph{adjacency list} saved in a sequence file.
+  \item[GraphInlinksCounter] Given the inverted adjacency lists it computes the
+  number of inlinks of each node.
+  \item[RevisionsConvertor] Converts a list of \emph{revision statistics}
+  (number of revisions, revision volume from plain-text to sequence files.
+\end{description}
+
+The two stages of the \emph{GreeDi} protocol are implemented as classes
+\emph{GreeDiFirst} and \emph{GreeDiSecond}. These two classes are very similar
+in implementation and they deal with:
+\begin{itemize}
+  \item parsing the program arguments;
+  \item reading the main input files - the tf-idf vectors;
+  \item setting up the desired reducer.
+\end{itemize}
+They also include the \emph{mapper} implementations which are simple as their
+only job is to partition the data.
+
+While the \emph{mappers} for the GreeDi protocol are simple and are almost
+always the same, independent of the used submodular functions being used, the
+\emph{reducers} have to deal with reading all the additional data for the more
+complex submodular functions (for example, the graph, the revision statistics).
+We implemented the following reducers:
+\begin{description}
+  \item[CombinerGreeDiReducer] Read multiple statistics - such as word count,
+  LSH-buckets, graph, revisions - and uses submodular functions that combines
+  them together \footnote{See Section~\vref{sec:word-coverage++}};
+  \item[CoverageGreeDiReducer] Reads as less as possible to apply either the
+  simple word coverage with a \emph{word importance} of \(1\) or with
+  \emph{word importance} as word count or document count \footnote{See
+  Section~\vref{sec:word-coverage++}};
+  \item[GraphGreeDiReducer] Reads the graph and applies \emph{graph coverage}
+  by itself \footnote{See Section~\vref{sec:graph-coverage}};
+  \item[LshBucketsGreeDiReducer] Reads the \ac{LSH} buckets and applies the
+  \emph{\ac{LSH} buckets function}. \footnote{See Section~ } \todo{Add to footnote 5.d. LSH buckets}.
+\end{description}
+
+\subsection{Influence \aclp{MR}}
 
 Dummy text.
 
