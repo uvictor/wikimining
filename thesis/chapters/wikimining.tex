@@ -1,6 +1,11 @@
 \chapter{WikiMining framework design}
 
-Dummy text.
+The framework is in an \emph{alpha} development state. While all the described
+functionality is implemented and works accordingly, you might sometimes find
+yourself needing to change the code in order to tweak some of the behaviour or
+that it might not be straight-forward to extend the framework with some
+specific complex functionality. However, I intend to bring it to a quality
+standard that will allow you to perform both of the above tasks with ease.
 
 \section{External libraries}
 
@@ -13,7 +18,7 @@ information concerning Wikipedia including, but not limited to:
 \begin{itemize}
   \item page link graph
   \item category link graph
-  \item page \(leftrightarrow\) category link graph
+  \item page \(\leftrightarrow\) category link graph
   \item page content (MediaWiki and plain-text formats)
 \end{itemize}
 
@@ -23,10 +28,10 @@ then be imported into a MySQL databased and accessed through the \ac{JWPL}
 \ac{API}. You can find more details about using \ac{JWPL} on their website
 \todo{https://code.google.com/p/jwpl/wiki/DataMachine}.
 
-\paragraph{Technical Details} The library is publicly available
-\todo{https://code.google.com/p/jwpl/} and its authors wrote a paper
-\cite{zesch2008jwpl} providing further insights into its inner workings. For the
-purposes of this thesis we use \emph{\ac{JWPL} 0.9.2}.
+The library is publicly available \todo{https://code.google.com/p/jwpl/} and
+its authors wrote a paper \cite{zesch2008jwpl} providing further insights into
+its inner workings. For the purposes of this thesis we use \emph{\ac{JWPL}
+0.9.2}.
 
 \subsection{Hadoop}
 
@@ -78,17 +83,77 @@ For the purposes of this thesis we use \emph{Hadoop 1.0.4}.
 
 \subsection{Mahout}
 
-\emph{Mahout} is scalable machine learning library designed to run over very large data sets using Hadoop \acl{MR}.
+\emph{Mahout} is a scalable machine learning library designed to run over very
+large data sets using Hadoop \acl{MR}. While it offers distributed algorithms
+for a lot of machine learning problems such as:
+\begin{itemize}
+  \item classification
+  \item clustering
+  \item recommendations
+\end{itemize}
+we are only using Mahout for indexing Wikipedia and creating the corresponding
+tf-idf vectors.
 
 \missingfigure{Architecture from http://www.slideshare.net/VaradMeru/introduction-to-mahout-and-machine-learning ?}
 
+\paragraph{Generating tf-idf vectors} To create tf-idf vectors from a set of
+plain-text documents \footnote{Stored in a \ac{HDFS}-specific format called
+Sequence Files.} is being done using \emph{mahout seq2sparse}. This tool has
+parameters that allow us to filter out rare words, stop-words and even perform
+stemming if needed.
+
+If you are interested in finding out more about Mahout you can read the book
+\emph{Mahout in Action} \todo{Citation needed} or visit their website
+\todo{https://mahout.apache.org/}. For the purposes of this thesis we use
+\emph{Mahout 0.9}.
+
+\textbf{Cloud9}\todo{Used for XML -> plain conversion}
+
 \section{System architecture}
 
-Dummy text.
+In this section we present how we designed and implemented the WikiMining
+library for summarising Wikipedia using submodular function maximisation.
 
 \subsection{Base data types}
 
-Dummy text.
+We use the following data type classes, defined in package
+\emph{ch.ethz.las.wikimining.base}:
+\begin{description}
+  \item[ArrayWritable] Different subclasses for serialiasing an array of
+  different types:
+    \begin{itemize}
+      \item \emph{IntArrayWritable} - for integers: \emph{IntWritable};
+      \item \emph{TextArrayWritable} - for strings: \emph{Text};
+    \end{itemize}
+  or offer more functionality such as print its content in plain text using a
+  \emph{toString()} method.
+  \item[DocumentWithVector] An (Integer document id, Vector) pair used in a lot
+  of MapReduces to partition the data as part of:
+    \begin{itemize}
+      \item the GreeDi protocol (see Section~\vref{sec:submod-max});
+      \item \acl{LSH} (see Section~ \todo{Preliminaries}).
+    \end{itemize}
+    It also comes in a \emph{Writable} form so that it can be serialisable by
+    Hadoop \acl{MR}.
+  \item[HashBandWritable] A (hash, band) pair used for \ac{LSH}.
+  \item[SquaredNearestNeighbour] A collection that gets the nearest neighbour
+  of an article (based on cosine similarity) from among the documents that were
+  written before the input article. This is used to compute \emph{document
+  influence}.
+  \item[Vector] Class from Mahout that represents a \emph{double}-valued
+  mathematical vector. It comes in two flavours:
+  \begin{itemize}
+    \item \emph{DenseVector} - stored as a normal array
+    \item \emph{RandomAccessSparseVector} - stored as a hash-map of indexes to
+    values.
+  \end{itemize}
+\end{description}
+
+In addition we have two classes for:
+\begin{itemize}
+  \item storing the default parameters - \emph{Defaults}
+  \item defining the different program arguments - \emph{Fields}
+\end{itemize}
 
 \subsection{Submodular functions}
 
@@ -98,15 +163,15 @@ Dummy text.
 
 Dummy text.
 
-\subsection{Selection and evaluation}
-
-Dummy text.
-
 \subsection{Coverage algorithms}
 
 Dummy text.
 
 \subsection{Influence algorithms}
+
+Dummy text.
+
+\subsection{Selection and evaluation}
 
 Dummy text.
 

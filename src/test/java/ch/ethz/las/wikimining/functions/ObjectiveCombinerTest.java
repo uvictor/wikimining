@@ -1,8 +1,8 @@
 
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.base.HashBandWritable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

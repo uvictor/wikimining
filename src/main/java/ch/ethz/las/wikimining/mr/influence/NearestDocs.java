@@ -1,9 +1,9 @@
 package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.mr.base.Defaults;
-import ch.ethz.las.wikimining.mr.base.Fields;
-import ch.ethz.las.wikimining.mr.base.HashBandWritable;
-import ch.ethz.las.wikimining.mr.base.TextArrayWritable;
+import ch.ethz.las.wikimining.base.Defaults;
+import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.base.HashBandWritable;
+import ch.ethz.las.wikimining.base.TextArrayWritable;
 import ch.ethz.las.wikimining.mr.coverage.GreeDiFirst;
 import ch.ethz.las.wikimining.mr.utils.MatrixSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.SetupHelper;

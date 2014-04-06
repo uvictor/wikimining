@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.mr.utils.h104;
 
-import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.base.Defaults;
 import java.io.IOException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;

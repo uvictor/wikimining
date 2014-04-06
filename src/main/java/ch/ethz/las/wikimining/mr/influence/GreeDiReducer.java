@@ -1,9 +1,9 @@
 package ch.ethz.las.wikimining.mr.influence;
 
 import ch.ethz.las.wikimining.functions.DocumentInfluence;
-import ch.ethz.las.wikimining.mr.base.Defaults;
-import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.base.Defaults;
+import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.base.Fields;
 import ch.ethz.las.wikimining.mr.utils.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.utils.VectorSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;

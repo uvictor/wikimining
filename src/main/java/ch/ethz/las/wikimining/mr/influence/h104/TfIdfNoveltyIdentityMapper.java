@@ -1,8 +1,8 @@
 
 package ch.ethz.las.wikimining.mr.influence.h104;
 
-import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.base.HashBandWritable;
 import java.io.IOException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapReduceBase;

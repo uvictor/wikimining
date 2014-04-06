@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

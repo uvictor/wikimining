@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.base.Fields;
 import ch.ethz.las.wikimining.mr.utils.SetupHelper;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;

@@ -1,4 +1,4 @@
-package ch.ethz.las.wikimining.mr.base;
+package ch.ethz.las.wikimining.base;
 
 /**
  * List of field names for MapReduce.

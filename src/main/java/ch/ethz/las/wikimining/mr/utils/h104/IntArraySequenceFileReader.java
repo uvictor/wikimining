@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.mr.utils.h104;
 
-import ch.ethz.las.wikimining.mr.base.IntArrayWritable;
+import ch.ethz.las.wikimining.base.IntArrayWritable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;

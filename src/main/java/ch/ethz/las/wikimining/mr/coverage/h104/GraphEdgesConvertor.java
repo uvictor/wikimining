@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.mr.coverage.h104;
 
-import ch.ethz.las.wikimining.mr.base.IntArrayWritable;
+import ch.ethz.las.wikimining.base.IntArrayWritable;
 import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
 import java.io.IOException;
 import java.util.HashSet;
