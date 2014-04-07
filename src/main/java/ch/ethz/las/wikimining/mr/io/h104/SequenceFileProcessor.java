@@ -1,4 +1,4 @@
-package ch.ethz.las.wikimining.mr.utils.h104;
+package ch.ethz.las.wikimining.mr.io.h104;
 
 import java.io.IOException;
 import java.util.HashMap;

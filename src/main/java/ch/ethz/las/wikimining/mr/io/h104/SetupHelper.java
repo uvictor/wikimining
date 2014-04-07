@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining.mr.utils.h104;
+package ch.ethz.las.wikimining.mr.io.h104;
 
 import ch.ethz.las.wikimining.base.Defaults;
 import java.io.IOException;

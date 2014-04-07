@@ -1,11 +1,11 @@
-package ch.ethz.las.wikimining.mr.utils;
+package ch.ethz.las.wikimining.mr.io.h104;
 
 import java.io.IOException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixWritable;
@@ -17,12 +17,12 @@ import org.apache.mahout.math.MatrixWritable;
  */
 public class MatrixSequenceFileReader {
   protected final FileSystem fs;
-  protected final Configuration config;
+  protected final JobConf config;
 
   private final Path path;
 
   public MatrixSequenceFileReader(
-      Path thePath, FileSystem theFs, Configuration theConfig) {
+      Path thePath, FileSystem theFs, JobConf theConfig) {
     path = thePath;
     fs = theFs;
     config = theConfig;
@@ -46,7 +46,7 @@ public class MatrixSequenceFileReader {
         ReflectionUtils.newInstance(reader.getKeyClass(), config);
       value = (MatrixWritable)
         ReflectionUtils.newInstance(reader.getValueClass(), config);
-      
+
       reader.next(key, value);
     }
 

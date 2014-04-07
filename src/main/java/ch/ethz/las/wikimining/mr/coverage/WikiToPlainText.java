@@ -1,7 +1,7 @@
 package ch.ethz.las.wikimining.mr.coverage;
 
 import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.PageTypeChecker;
+import ch.ethz.las.wikimining.mr.io.PageTypeChecker;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPageInputFormat;
 import java.io.IOException;

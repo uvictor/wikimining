@@ -2,7 +2,7 @@
 package ch.ethz.las.wikimining.evaluate;
 
 import ch.ethz.las.wikimining.evaluate.NipsCiteCounter;
-import ch.ethz.las.wikimining.mr.utils.h104.TextVectorSequenceFileReader;
+import ch.ethz.las.wikimining.mr.io.h104.TextVectorSequenceFileReader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

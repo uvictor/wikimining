@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining.mr.utils;
+package ch.ethz.las.wikimining.mr.io;
 
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 import org.apache.hadoop.mapreduce.Mapper;

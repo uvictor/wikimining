@@ -1,8 +1,8 @@
 
 package ch.ethz.las.wikimining.evaluate;
 
-import ch.ethz.las.wikimining.mr.utils.h104.SequenceFileProcessor;
-import ch.ethz.las.wikimining.mr.utils.h104.TextVectorKeySequenceFileReader;
+import ch.ethz.las.wikimining.mr.io.h104.SequenceFileProcessor;
+import ch.ethz.las.wikimining.mr.io.h104.TextVectorKeySequenceFileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;

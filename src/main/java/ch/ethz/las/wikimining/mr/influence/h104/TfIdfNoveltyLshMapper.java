@@ -4,7 +4,7 @@ import ch.ethz.las.wikimining.base.Defaults;
 import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.base.Fields;
 import ch.ethz.las.wikimining.base.HashBandWritable;
-import ch.ethz.las.wikimining.mr.utils.h104.MatrixSequenceFileReader;
+import ch.ethz.las.wikimining.mr.io.h104.MatrixSequenceFileReader;
 import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

@@ -3,7 +3,7 @@ package ch.ethz.las.wikimining.mr.coverage.h104;
 import ch.ethz.las.wikimining.base.Defaults;
 import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
 import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
+import ch.ethz.las.wikimining.mr.io.h104.SetupHelper;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

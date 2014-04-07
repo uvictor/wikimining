@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package ch.ethz.las.wikimining.mr.utils;
+package ch.ethz.las.wikimining.mr.io;
 
 import java.io.IOException;
 import java.util.HashMap;

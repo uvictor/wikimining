@@ -1,9 +1,9 @@
 
-package ch.ethz.las.wikimining.mr.utils.h104;
+package ch.ethz.las.wikimining.mr.io.h104;
 
-import ch.ethz.las.wikimining.base.HashBandWritable;
 import ch.ethz.las.wikimining.base.IntArrayWritable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,32 +19,44 @@ import org.apache.hadoop.util.ReflectionUtils;
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */
-public class BucketsSequenceFileReader
-    extends SequenceFileProcessor<HashBandWritable, HashSet<Integer>> {
+public class IntArraySequenceFileReader
+    extends SequenceFileProcessor<Integer, ArrayList<Integer>> {
 
-  public BucketsSequenceFileReader(
+  private HashSet<Integer> docIds;
+
+  public IntArraySequenceFileReader(
       Path thePath, FileSystem theFs, JobConf theConfig) {
     super(thePath, theFs, theConfig);
+
+    docIds = null;
   }
 
   @Override
   protected void processContent(FileStatus status) throws IOException {
     try (SequenceFile.Reader reader =
         new SequenceFile.Reader(fs, status.getPath(), config)) {
-      HashBandWritable key = (HashBandWritable)
+      IntWritable key = (IntWritable)
         ReflectionUtils.newInstance(reader.getKeyClass(), config);
       IntArrayWritable value = (IntArrayWritable)
         ReflectionUtils.newInstance(reader.getValueClass(), config);
 
       while (reader.next(key, value)) {
-        HashSet<Integer> bucket = new HashSet<>(value.get().length);
-        for (Writable docIdWritable : value.get()) {
-          IntWritable docId = (IntWritable) docIdWritable;
-          bucket.add(docId.get());
+        if (docIds != null && !docIds.contains(key.get())) {
+          continue;
         }
 
-        map.put(key, bucket);
+        ArrayList<Integer> edges = new ArrayList<>(value.get().length);
+        for (Writable docIdWritable : value.get()) {
+          IntWritable docId = (IntWritable) docIdWritable;
+          edges.add(docId.get());
+        }
+
+        map.put(key.get(), edges);
       }
     }
+  }
+
+  public void setDocIds(HashSet<Integer> theDocIds) {
+    docIds = theDocIds;
   }
 }

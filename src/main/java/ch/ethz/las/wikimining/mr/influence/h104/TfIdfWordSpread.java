@@ -1,8 +1,8 @@
 package ch.ethz.las.wikimining.mr.influence.h104;
 
 import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.mr.utils.h104.IntegerSequenceFileReader;
-import ch.ethz.las.wikimining.mr.utils.h104.SetupHelper;
+import ch.ethz.las.wikimining.mr.io.h104.IntegerSequenceFileReader;
+import ch.ethz.las.wikimining.mr.io.h104.SetupHelper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;

@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.evaluate;
 
-import ch.ethz.las.wikimining.mr.utils.h104.TextVectorSequenceFileReader;
+import ch.ethz.las.wikimining.mr.io.h104.TextVectorSequenceFileReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
