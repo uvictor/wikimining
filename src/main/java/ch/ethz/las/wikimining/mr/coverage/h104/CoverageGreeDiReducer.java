@@ -3,9 +3,9 @@ package ch.ethz.las.wikimining.mr.coverage.h104;
 
 import ch.ethz.las.wikimining.functions.WeightedWordCoverage;
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
-import ch.ethz.las.wikimining.base.Defaults;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.io.h104.FakeIntLongSequenceFileReader;
 import ch.ethz.las.wikimining.mr.io.h104.IntLongSequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;

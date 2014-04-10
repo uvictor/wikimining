@@ -1,4 +1,4 @@
-package ch.ethz.las.wikimining.base;
+package ch.ethz.las.wikimining.mr.base;
 
 /**
  * List of field names for MapReduce.
@@ -16,11 +16,13 @@ public enum Fields {
   DOCS_SUBSET("docs"),
   GRAPH("graph"),
   IGNORE("ignore"),
+  INFO("info"),
   INPUT("input"),
   LANGUAGE("language"),
   OUTPUT("output"),
   OUTPUT_BUCKETS("outputBuckets"),
   PARTITION_COUNT("partitions"),
+  TYPE("type"),
   REVISIONS("revisions"),
   ROWS("rows"),
   SECOND_STAT("secondStat"),
@@ -28,6 +30,10 @@ public enum Fields {
   WORD_SPREAD("spread"),
   WORD_COUNT("wordCount"),
   WORD_COUNT_TYPE("wordCountType"),
+
+  VALUE_INLINKS("inlinks"),
+  VALUE_REVISIONS_COUNT("revcount"),
+  VALUE_REVISIONS_VOLUME("revvolume"),
   ;
 
   private final String value;

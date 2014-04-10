@@ -1,10 +1,10 @@
 package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.base.Defaults;
-import ch.ethz.las.wikimining.base.DocumentWithVector;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVector;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import ch.ethz.las.wikimining.mr.io.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.io.MatrixSequenceFileReader;
 import ch.ethz.las.wikimining.mr.io.SequenceFileReader;

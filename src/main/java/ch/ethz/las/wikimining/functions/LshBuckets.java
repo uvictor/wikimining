@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;

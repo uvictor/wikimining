@@ -1,12 +1,12 @@
 
 package ch.ethz.las.wikimining.mr.influence.h104;
 
-import ch.ethz.las.wikimining.base.DocumentWithVector;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.base.HashBandWritable;
-import ch.ethz.las.wikimining.base.NearestNeighbourCollection;
-import ch.ethz.las.wikimining.base.SquaredNearestNeighbour;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVector;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.NearestNeighbourCollection;
+import ch.ethz.las.wikimining.mr.base.SquaredNearestNeighbour;
 import ch.ethz.las.wikimining.mr.io.h104.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.io.h104.SequenceFileProcessor;
 import java.io.IOException;

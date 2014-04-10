@@ -1,10 +1,11 @@
 package ch.ethz.las.wikimining.mr.coverage.h104;
 
-import ch.ethz.las.wikimining.base.Defaults;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.io.h104.SetupHelper;
 import java.io.IOException;
+import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -77,6 +78,8 @@ public class GreeDiFirst extends Configured implements Tool {
   private String bucketsPath;
   private String graphPath;
   private String revisionsPath;
+  private String[] types;
+  private String info;
   private int partitionCount;
   private int selectCount;
 
@@ -91,10 +94,19 @@ public class GreeDiFirst extends Configured implements Tool {
 
     JobConf config = new JobConf(getConf(), GreeDiFirst.class);
     config.setJobName(String.format(
-        "Coverage-GreeDiFirst[%s %s]", partitionCount, selectCount));
+        "Coverage-GreeDiFirst[%s %s %s]", info, partitionCount, selectCount));
 
     config.setInt(Fields.PARTITION_COUNT.get(), partitionCount);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
+    if (types != null) {
+      for (String value : types) {
+        if (Fields.VALUE_INLINKS.get().equals(value)
+            || Fields.VALUE_REVISIONS_COUNT.get().equals(value)
+            || Fields.VALUE_REVISIONS_VOLUME.get().equals(value)) {
+          config.setBoolean(value, true);
+        }
+      }
+    }
 
     config.setNumReduceTasks(partitionCount);
 
@@ -112,19 +124,14 @@ public class GreeDiFirst extends Configured implements Tool {
       config.set(Fields.WORD_COUNT.get(), wordCountPath);
       config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
     }
-    /*if (bucketsPath != null) {
-      config.set(Fields.BUCKETS.get(), bucketsPath);
-      //config.setReducerClass(LshBucketsGreeDiReducer.class);
-    }
-    if (graphPath != null) {
-      config.set(Fields.GRAPH.get(), graphPath);
-      //config.setReducerClass(CombinerGreeDiReducer.class);
-    }
     if (revisionsPath != null) {
+      if (bucketsPath != null) {
+        config.set(Fields.BUCKETS.get(), bucketsPath);
+      }
+      config.set(Fields.GRAPH.get(), graphPath);
       config.set(Fields.REVISIONS.get(), revisionsPath);
-    }
-    config.setReducerClass(CombinerGreeDiReducer.class);*/
-    if (bucketsPath != null) {
+      config.setReducerClass(CombinerGreeDiReducer.class);
+    } else if (bucketsPath != null) {
       config.set(Fields.BUCKETS.get(), bucketsPath);
       config.setReducerClass(LshBucketsGreeDiReducer.class);
     } else if (graphPath != null) {
@@ -166,6 +173,12 @@ public class GreeDiFirst extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
+    options.addOption(OptionBuilder.withArgName("string").hasOptionalArgs(3)
+        .withValueSeparator('-').withDescription("Type")
+        .create(Fields.TYPE.get()));
+    options.addOption(OptionBuilder.withArgName("string").hasArg()
+        .withDescription("Job info").create(Fields.INFO.get()));
+
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
     try {
@@ -191,6 +204,9 @@ public class GreeDiFirst extends Configured implements Tool {
     graphPath = cmdline.getOptionValue(Fields.GRAPH.get());
     revisionsPath = cmdline.getOptionValue(Fields.REVISIONS.get());
 
+    types = cmdline.getOptionValues(Fields.TYPE.get());
+    info = cmdline.getOptionValue(Fields.INFO.get());
+
     partitionCount = Defaults.PARTITION_COUNT.get();
     if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {
       partitionCount =
@@ -211,9 +227,10 @@ public class GreeDiFirst extends Configured implements Tool {
     logger.info(" - wordCountType: " + wordCountType);
     logger.info(" - buckets: " + bucketsPath);
     logger.info(" - graph: " + graphPath);
-    logger.info(" - graph: " + revisionsPath);
+    logger.info(" - revisions: " + revisionsPath);
     logger.info(" - partitions: " + partitionCount);
     logger.info(" - select: " + selectCount);
+    logger.info(" - type: " + Arrays.toString(types));
 
     return 0;
   }

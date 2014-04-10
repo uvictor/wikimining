@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
  */
 public class WikiRandomSelect {
 
-  private Logger logger;
+  private final Logger logger;
 
   private final String inputPath;
   private final String outputPath;
@@ -33,24 +33,11 @@ public class WikiRandomSelect {
     logger = Logger.getLogger(this.getClass());
 
     inputPath = theInputPath;
-    outputPath = theOutputPath + "/part-00000";
+    outputPath = theOutputPath + "/part-0000";
     selectCount = theSelectCount;
   }
 
-  public void select() {
-    readDocIds();
-    Collections.shuffle(docIds);
-
-    try (PrintWriter out = new PrintWriter(outputPath)) {
-      for (int i = 0; i < selectCount; i++) {
-        out.println(docIds.get(i));
-      }
-    } catch (IOException e) {
-      logger.fatal("Could not write to file.", e);
-    }
-  }
-
-  private void readDocIds() {
+  public void readDocIds() {
     try {
       JobConf config = new JobConf();
       Path tfidfsPath = new Path(inputPath);
@@ -68,9 +55,28 @@ public class WikiRandomSelect {
     logger.info("Loaded " + docIds.size() + " doc ids.");
   }
 
+  public void select(int count) {
+    Collections.shuffle(docIds);
+
+    try (PrintWriter out = new PrintWriter(outputPath + count)) {
+      for (int i = 0; i < selectCount; i++) {
+        out.println(docIds.get(i));
+      }
+    } catch (IOException e) {
+      logger.fatal("Could not write to file.", e);
+    }
+  }
+
+  public void select10() {
+    readDocIds();
+    for (int i = 0; i < 10; i++) {
+      select(i);
+    }
+  }
+
   public static void main(String[] args) {
     WikiRandomSelect selector =
         new WikiRandomSelect(args[0], args[1], Integer.parseInt(args[2]));
-    selector.select();
+    selector.select10();
   }
 }

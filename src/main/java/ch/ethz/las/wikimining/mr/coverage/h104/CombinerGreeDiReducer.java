@@ -2,10 +2,10 @@
 package ch.ethz.las.wikimining.mr.coverage.h104;
 
 import ch.ethz.las.wikimining.functions.CombinerWordCoverage;
-import ch.ethz.las.wikimining.base.Defaults;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
 import ch.ethz.las.wikimining.mr.io.h104.IntArraySequenceFileReader;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
@@ -44,6 +44,10 @@ public class CombinerGreeDiReducer extends MapReduceBase implements Reducer<
   private HashMap<Integer, Long> wordCount;
   private int selectCount;
 
+  private boolean useInlinks;
+  private boolean useRevisionCount;
+  private boolean useRevisionVolume;
+
   @Override
   public void configure(JobConf config) {
     wordCount = CoverageGreeDiReducer.readWordCount(config);
@@ -76,6 +80,12 @@ public class CombinerGreeDiReducer extends MapReduceBase implements Reducer<
 
     selectCount =
         config.getInt(Fields.SELECT_COUNT.get(), Defaults.SELECT_COUNT.get());
+
+    useInlinks = config.getBoolean(Fields.VALUE_INLINKS.get(), false);
+    useRevisionCount =
+        config.getBoolean(Fields.VALUE_REVISIONS_COUNT.get(), false);
+    useRevisionVolume =
+        config.getBoolean(Fields.VALUE_REVISIONS_VOLUME.get(), false);
   }
 
   @Override
@@ -84,7 +94,8 @@ public class CombinerGreeDiReducer extends MapReduceBase implements Reducer<
       OutputCollector<NullWritable, IntWritable> output, Reporter reporter)
       throws IOException {
     final CombinerWordCoverage wordCoverage =
-        new CombinerWordCoverage(wordCount, documents);
+        new CombinerWordCoverage(wordCount, documents,
+            useInlinks, useRevisionCount, useRevisionVolume);
     logger.info("Created WordCoverageFromMahout");
 
     /*final LshBuckets lshBuckets = new LshBuckets(buckets);
@@ -118,6 +129,20 @@ public class CombinerGreeDiReducer extends MapReduceBase implements Reducer<
     for (Integer docId : selected) {
       IntWritable outValue = new IntWritable(docId);
       output.collect(NullWritable.get(), outValue);
+    }
+
+    // Compute the score of the selected documents for all coverage variants.
+    for (int i = 0; i < 8; i++) {
+      useInlinks = (i & 1) > 0;
+      useRevisionCount = (i & 2) > 0;
+      useRevisionVolume = (i & 4) > 0;
+
+      wordCoverage.setUseInlinks(useInlinks);
+      wordCoverage.setUseRevisionCount(useRevisionCount);
+      wordCoverage.setUseRevisionVolume(useRevisionVolume);
+      reporter.incrCounter("ScoreX100",
+          useInlinks + "-" + useRevisionCount + "-" + useRevisionVolume,
+          Math.round(wordCoverage.compute(selected) * 10000));
     }
   }
 }

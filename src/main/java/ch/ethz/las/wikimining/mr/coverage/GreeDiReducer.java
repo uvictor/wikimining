@@ -7,9 +7,9 @@
 package ch.ethz.las.wikimining.mr.coverage;
 
 import ch.ethz.las.wikimining.functions.WordCoverageFromMahout;
-import ch.ethz.las.wikimining.base.Defaults;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.sfo.SfoGreedyAlgorithm;
 import ch.ethz.las.wikimining.sfo.SfoGreedyLazy;
 import java.io.IOException;

@@ -1,5 +1,5 @@
 
-package ch.ethz.las.wikimining.base;
+package ch.ethz.las.wikimining.mr.base;
 
 import java.util.Collection;
 

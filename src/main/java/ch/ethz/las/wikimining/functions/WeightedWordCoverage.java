@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.functions;
 
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
 import java.util.Iterator;
 import java.util.Map;
 import org.apache.mahout.math.Vector;

@@ -1,7 +1,7 @@
 
 package ch.ethz.las.wikimining.mr.io;
 
-import ch.ethz.las.wikimining.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.Defaults;
 import edu.umd.cloud9.mapreduce.NullInputFormat;
 import java.io.IOException;
 import org.apache.hadoop.fs.Path;

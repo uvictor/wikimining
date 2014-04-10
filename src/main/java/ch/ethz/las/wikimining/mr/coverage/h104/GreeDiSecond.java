@@ -1,10 +1,11 @@
 package ch.ethz.las.wikimining.mr.coverage.h104;
 
-import ch.ethz.las.wikimining.base.Defaults;
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.mr.base.Defaults;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.io.h104.SetupHelper;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -107,6 +108,9 @@ public class GreeDiSecond extends Configured implements Tool {
   private String wordCountType;
   private String bucketsPath;
   private String graphPath;
+  private String revisionsPath;
+  private String[] types;
+  private String info;
   private int selectCount;
 
   public GreeDiSecond() { }
@@ -119,14 +123,20 @@ public class GreeDiSecond extends Configured implements Tool {
     }
 
     JobConf config = new JobConf(getConf(), GreeDiSecond.class);
-    config.setJobName(String.format("Coverage-GreeDiSecond[%s]", selectCount));
+    config.setJobName(
+        String.format("Coverage-GreeDiSecond[%s %s]", info, selectCount));
 
-    if (wordCountPath != null) {
-      config.set(Fields.WORD_COUNT.get(), wordCountPath);
-      config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
-    }
     config.set(Fields.DOCS_SUBSET.get(), docsSubsetPath);
     config.setInt(Fields.SELECT_COUNT.get(), selectCount);
+    if (types != null) {
+      for (String value : types) {
+        if (Fields.VALUE_INLINKS.get().equals(value)
+            || Fields.VALUE_REVISIONS_COUNT.get().equals(value)
+            || Fields.VALUE_REVISIONS_VOLUME.get().equals(value)) {
+          config.setBoolean(value, true);
+        }
+      }
+    }
 
     config.setNumReduceTasks(1);
 
@@ -144,7 +154,14 @@ public class GreeDiSecond extends Configured implements Tool {
       config.set(Fields.WORD_COUNT.get(), wordCountPath);
       config.set(Fields.WORD_COUNT_TYPE.get(), wordCountType);
     }
-    if (bucketsPath != null) {
+    if (revisionsPath != null) {
+      if (bucketsPath != null) {
+        config.set(Fields.BUCKETS.get(), bucketsPath);
+      }
+      config.set(Fields.GRAPH.get(), graphPath);
+      config.set(Fields.REVISIONS.get(), revisionsPath);
+      config.setReducerClass(CombinerGreeDiReducer.class);
+    } else if (bucketsPath != null) {
       config.set(Fields.BUCKETS.get(), bucketsPath);
       config.setReducerClass(LshBucketsGreeDiReducer.class);
     } else if (graphPath != null) {
@@ -181,8 +198,16 @@ public class GreeDiSecond extends Configured implements Tool {
         .withDescription("Buckets").create(Fields.BUCKETS.get()));
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Graph").create(Fields.GRAPH.get()));
+    options.addOption(OptionBuilder.withArgName("path").hasArg()
+        .withDescription("Revisions").create(Fields.REVISIONS.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
+
+    options.addOption(OptionBuilder.withArgName("string").hasOptionalArgs(3)
+        .withValueSeparator('-').withDescription("Type")
+        .create(Fields.TYPE.get()));
+    options.addOption(OptionBuilder.withArgName("string").hasArg()
+        .withDescription("Job info").create(Fields.INFO.get()));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -209,6 +234,9 @@ public class GreeDiSecond extends Configured implements Tool {
     wordCountType = cmdline.getOptionValue(Fields.WORD_COUNT_TYPE.get());
     bucketsPath = cmdline.getOptionValue(Fields.BUCKETS.get());
     graphPath = cmdline.getOptionValue(Fields.GRAPH.get());
+    revisionsPath = cmdline.getOptionValue(Fields.REVISIONS.get());
+    types = cmdline.getOptionValues(Fields.TYPE.get());
+    info = cmdline.getOptionValue(Fields.INFO.get());
 
     selectCount = Defaults.SELECT_COUNT.get();
     if (cmdline.hasOption(Fields.SELECT_COUNT.get())) {
@@ -228,8 +256,10 @@ public class GreeDiSecond extends Configured implements Tool {
     logger.info(" - wordCountType: " + wordCountType);
     logger.info(" - buckets: " + bucketsPath);
     logger.info(" - graph: " + graphPath);
+    logger.info(" - revisions: " + revisionsPath);
     logger.info(" - select: " + selectCount);
     logger.info(" - docs: " + docsSubsetPath);
+    logger.info(" - type: " + Arrays.toString(types));
 
     return 0;
   }

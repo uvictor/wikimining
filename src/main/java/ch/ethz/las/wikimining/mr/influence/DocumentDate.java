@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.io.PageTypeChecker;
 import ch.ethz.las.wikimining.mr.io.SetupHelper;
 import edu.umd.cloud9.collection.wikipedia.WikipediaPage;

@@ -1,4 +1,4 @@
-package ch.ethz.las.wikimining.base;
+package ch.ethz.las.wikimining.mr.base;
 
 /**
  * List of defaults for MapReduce.

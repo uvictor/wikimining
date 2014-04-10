@@ -1,9 +1,9 @@
 package ch.ethz.las.wikimining.mr.influence.h104;
 
-import ch.ethz.las.wikimining.base.DocumentWithVectorWritable;
-import ch.ethz.las.wikimining.base.Fields;
-import ch.ethz.las.wikimining.base.HashBandWritable;
-import ch.ethz.las.wikimining.base.IntArrayWritable;
+import ch.ethz.las.wikimining.mr.base.DocumentWithVectorWritable;
+import ch.ethz.las.wikimining.mr.base.Fields;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.IntArrayWritable;
 import ch.ethz.las.wikimining.mr.io.h104.SetupHelper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

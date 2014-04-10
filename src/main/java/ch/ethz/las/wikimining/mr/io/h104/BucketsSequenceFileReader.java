@@ -1,8 +1,8 @@
 
 package ch.ethz.las.wikimining.mr.io.h104;
 
-import ch.ethz.las.wikimining.base.HashBandWritable;
-import ch.ethz.las.wikimining.base.IntArrayWritable;
+import ch.ethz.las.wikimining.mr.base.HashBandWritable;
+import ch.ethz.las.wikimining.mr.base.IntArrayWritable;
 import java.io.IOException;
 import java.util.HashSet;
 import org.apache.hadoop.fs.FileStatus;

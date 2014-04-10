@@ -1,6 +1,6 @@
 package ch.ethz.las.wikimining.mr.influence;
 
-import ch.ethz.las.wikimining.base.Fields;
+import ch.ethz.las.wikimining.mr.base.Fields;
 import ch.ethz.las.wikimining.mr.io.IntegerSequenceFileReader;
 import ch.ethz.las.wikimining.mr.io.SetupHelper;
 import java.io.IOException;
