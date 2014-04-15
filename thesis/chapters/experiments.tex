@@ -70,31 +70,155 @@ For the purposes of this thesis we use \emph{number of inlinks} as we view
 Wikipedia as a non-competitive environment (different from the game between
 search engines and malevolent web masters).
 
+\subsection{Graphs and tables}
+\todo{Explain the format.}
+
 \section{Baselines}
 
-Dummy text.
+Dummy text. \todo{Explain ALL the results!}
 
 \subsection{Random}
 
 Dummy text.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rand-mean.png}
+  \caption{The score of the \emph{random selected} sets as given by the other
+  submodular functions}
+  \label{img:rand-mean}
+\end{figure}
 
 \subsection{Word coverage}
 
 Dummy text.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/wc.png}
+  \caption{The score of the \emph{word coverage} set as given by the other
+  submodular functions}
+  \label{img:wc}
+\end{figure}
+
+\begin{table}
+    \begin{tabular}{lll}
+    1  & History of Western civilization                  & 115   \\
+    2  & Stephen Tompkinson                               & 78    \\
+    3  & Timeline of United States inventions (1890–1945) & 381   \\
+    4  & November 2013                                    & 102   \\
+    5  & Education in the United States                   & 1098  \\
+    6  & American Civil War bibliography                  & 320   \\
+    7  & Races of the Mass Effect universe                & 42    \\
+    8  & October 2011 in sports                           & 98    \\
+    9  & Prince (musician)                                & 2458  \\
+    10 & Stowe House                                      & 109   \\
+    11 & Outline of science                               & 12    \\
+    12 & 2000 New Year Honours                            & 77    \\
+    13 & Seasons in Scottish football                     & 856   \\
+    14 & Lists of state leaders by year                   & 2563  \\
+    15 & The Idler (1758–1760)                            & 32    \\
+    16 & National Football League                         & 22939 \\
+    17 & Disasters of the Century                         & 8     \\
+    18 & Sustainable Services                             & 1     \\
+    19 & Australian of the Year                           & 232   \\
+    20 & Largest organisms                                & 41    \\
+    \end{tabular}
+    \caption {Top 20 articles selected by the \emph{word coverage} function.}
+\end{table}
 
 \subsection{Document influence}
 
 Dummy text.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/infl.png}
+  \caption{The scores of the \emph{document influence} set as given by the
+  other submodular functions}
+  \label{img:infl}
+\end{figure}
 
 \section{Graph coverage}
 
 Dummy text.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/graph.png}
+  \caption{The scores of the \emph{graph coverage} set as given by the other
+  submodular functions}
+  \label{img:graph}
+\end{figure}
+
+\section{\ac{LSH} buckets}
+
+Dummy text.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/wc+lsh.png}
+  \caption{The scores of the set selected by \emph{\ac{LSH} buckets} linearly
+  combined with \emph{word coverage} as given by the other submodular
+  functions}
+  \label{img:wc+lsh}
+\end{figure}
 
 \section{Beyond word coverage}
 
 Dummy text.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rc.png}
+  \caption{The scores of the \emph{tf-idf -- revisions count} set as given by
+  the other submodular functions}
+  \label{img:rc}
+\end{figure}
 
-\section{Scaling document influence}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rc-rv.png}
+  \caption{The scores of the \emph{tf-idf -- revisions count -- revisions
+  volume} set as given by the other submodular functions}
+  \label{img:rc-rv}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl-rv.png}
+  \caption{The scores of the \emph{tf-idf -- inlinks count -- revisions volume}
+  set as given by the other submodular functions}
+  \label{img:inl-rv}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl-rc.png}
+  \caption{The scores of the \emph{tf-idf -- inlinks count -- revisions count}
+  set as given by the other submodular functions}
+  \label{img:inl-rc}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl.png}
+  \caption{The scores of the \emph{tf-idf -- inlinks count} set as given by the
+  other submodular functions}
+  \label{img:inl}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rv.png}
+  \caption{The scores of the \emph{tf-idf -- revisions volume} set as given by
+  the other submodular functions}
+  \label{img:rv}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl-rc-rv.png}
+  \caption{The scores of the \emph{tf-idf -- inlinks count -- revisions count
+  -- revisions volume} set as given by the other submodular functions}
+  \label{img:}
+\end{figure}
+
+\section{Running time}
 
 Dummy text.
 

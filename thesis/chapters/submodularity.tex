@@ -8,6 +8,7 @@ you can read survey \cite{krause2012submodular} on \emph{submodular function
 maximisation}.
 
 \section{Submodular functions}
+\label{sec:submod-functions}
 
 In this section we introduce what are submodular functions and why they are
 important. We also offer a couple of examples to shed some light on how these
@@ -30,7 +31,7 @@ future than it currently is, an effect also knows as \emph{diminishing returns}.
   \label{def:monotonicity}
   A set function \(f : 2^D \to \R\) is monotone iff
   \(\forall S, T \text{ such that } S \subseteq T \subseteq D\) we have
-  \[f(S) \leq f(T).\]
+  \[f(S) \leq f(T) \text{ and } f(\emptyset) = 0.\]
 \end{definition}
 
 From Definition~\ref{def:submodularity} and Definition~\ref{def:monotonicity}
@@ -79,6 +80,7 @@ A very useful property of submodular functions is that the class of submodular
 functions is closed under non-negative linear combinations. \todo{Citation
 needed}
 \begin{proposition}[Closedness under non-negative linear combinations]
+\label{prop:linear-combinations}
   Let \(g_1, g_2, \ldots, g_n : 2^D \to \R \) be submodular functions and \(\lambda_1, \lambda_2, \ldots, \lambda_n \in \R_+\). \\
   Then
   \[f(S) := \sum_{i=1}^n \lambda_i g_i(S)\]
@@ -117,7 +119,8 @@ some function \(f\) is \emph{NP-hard} \todo{Citation needed / Feige, 1998}.
   \begin{algorithmic}
     \STATE \(S \gets \emptyset\)
     \WHILE{\(|S| < k\)}
-      \STATE \(d^* \gets \argmax_{d \in D} f(S \cup {d}) - f(S)\)
+      \STATE \(d^* \gets \argmax_{d \in D} \left[ f(S \cup {d}) - f(S)
+          \right]\)
       \STATE \(S \gets S \cup {d^*}\)
     \ENDWHILE
     Answer \(S\)
@@ -193,8 +196,11 @@ in Definition~\ref{def:word-coverage}.
   where:
   \begin{align*}
     &\theta : W \to \R_+ \text{ represents the importance of word \(w\),} \\
-    &\phi : D \times W \to \R_+ \text{ represents the coverage of word \(w\) in
-    document \(d\) and it is usually chosen to be tf-idf\((d, w)\).}
+    &\phi : D \times W \to \R_+
+    \begin{aligned}[t]
+      &\text{represents the coverage of word \(w\) in document \(d\)} \\
+      &\text{and it is usually chosen to be tf-idf\((d, w)\).}
+    \end{aligned}
   \end{align*}
 \end{definition}
 Remember that we described term-frequency--inverted-document-frequency
@@ -220,5 +226,127 @@ words\footnote{Not to be confused with stop words.}.
 \section{Document influence}
 \label{sec:doc-influence}
 
-Dummy text.
+While word coverage captures information well enough, it does not explain how
+documents influenced each other nor how the corpus evolved over time. By
+capturing document influence in the submodular function, one can use this new
+measure to select the most important documents.
+
+\subsection{Definition}
+
+Sipos et al \cite{sipos2012temporal} propose combining two complementary
+notions in a single submodular function that takes into account document
+influence when scoring an article. We define this function in
+Definition~\ref{def:doc-influence}.
+
+Let:
+\begin{align*}
+  &D \text{ be a set of documents,} \\
+  &W \text{ be a set of all words from all documents in \(D\),} \\
+  &Y \text{ be a set of all publishing dates of the documents in \(D\),} \\
+  &t(d) \text{ be a function that gives the publishing date of document \(d \in
+  D\).}
+\end{align*}
+
+\begin{definition}[Document influence]
+  \label{def:doc-influence}
+  We define:
+  \begin{align*}
+    &f : 2^D \to \R_+ \\
+    &f(S) := \sum_{w \in W} \sum_{y \in Y} \theta(w, y)
+    \max_{d \in \{d' \in S | t(d') < y\}} \nu(d, w) \,(\forall S \subseteq D)
+  \end{align*}
+  where:
+  \begin{align*}
+    &\theta : W \times Y \to \R_+
+    \begin{aligned}[t]
+      &\text{represents the importance of word \(w\) in year \(y\)} \\
+      &\text{and it used to measure the \emph{spread} of the word,}
+    \end{aligned} \\
+    &\phi : D \times W \to \R_+ \text{ represents the \emph{novelty} of word
+    \(w\) in document \(d\).}
+  \end{align*}
+\end{definition}
+
+The same authors \cite{sipos2012temporal} also define \emph{word spread} and
+\emph{document novelty} that are used above in
+Definition~\ref{def:doc-influence}.
+Let:
+\begin{align*}
+  &\phi : D \times W \to \R_+
+  \begin{aligned}[t]
+    &\text{be the coverage of word \(w\) in document \(d\),} \\
+    &\text{usually chosen to be tf-idf\((d, w)\).}
+  \end{aligned}
+\end{align*}
+
+\begin{definition}[Word spread]
+  \label{def:word-spread}
+  We define:
+  \begin{align*}
+    &\theta : W \times Y \to \R_+
+    &\theta(w, y) = \sum_{d \in \{d' \in D | t(d) = y\}} \phi(d, w)
+  \end{align*}
+\end{definition}
+
+\begin{definition}[Document novelty]
+  \label{def:doc-novelty}
+  We define:
+  \begin{align*}
+    &\nu : D \times W \to \R_+ \\
+    &\nu(d, w) = \max \left\{ 0, \min_{d' \in \mathcal{N}(d)}
+      \left\{ \phi(d, w) - \phi(d', w) \right\} \right\}
+  \end{align*}
+  where:
+  \begin{align*}
+    &\mathcal{N}(d)
+    \begin{aligned}[t]
+      &\text{is a set representing the k-nearest neighbours of
+    document \(d\)} \\
+      &\text{from the given corpus \(D\).}
+    \end{aligned}
+  \end{align*}
+\end{definition}
+
+\subsection{Rationale}
+
+In order to measure \emph{document influence} we have to find suitable metrics
+that achieve this exact task. Sipos et al \cite{sipos2012temporal} propose two
+metrics:
+\begin{itemize}
+  \item word spread
+  \item document novelty
+\end{itemize}
+that together achieve our purpose of measuring influence and as such find the
+most important, valuable documents.
+
+\subsubsection{Word spread}
+
+The idea of \emph{word spread} stems from viewing words not just as static
+concepts, but as ideas that evolve over time.
+To be able to do this one has to extend the concept of \emph{word importance}
+introduced in Definition~\vref{def:word-coverage} to depend not only the word
+itself, but also on the year that word is to be considered.
+This is a valuable insight because as humans when we talk about a field -- for
+example, neural networks -- we would value that term differently depending on
+the year we are in. If we were in 1980, it would be an exciting new idea that
+will manage to solve all the difficult \acl{AI} problems, if we were in the
+1990s, it would have been an idea that cannot solve any of the harder problems,
+while today we view the neural networks field very promising again.
+In a nutshell \emph{word spread} aims to capture what are the important
+concepts on each particular date. It is important to note that this date is
+open to different granularities: which can be anything from hour granularity
+(or smaller) up to year granularity (or larger).
+
+\subsubsection{Document novelty}
+
+While the formal definition of \emph{document novelty} might look a little more
+complicated, the intuition behind it is really simple: we want to minimize
+counting the same concepts -- mentioned in multiple documents -- multiple
+times.
+For example, when considering published papers, if we already selected \(3\)
+very good documents, we want to lower the \emph{novelty score} of a survey
+paper that discusses the same \(3\) papers.
+This is true for \emph{Wikipedia} as well, where one can find (human-written)
+general articles that offer an overview of a broad topic and where each section
+links to another page that only discusses that particular sub-topic.
 

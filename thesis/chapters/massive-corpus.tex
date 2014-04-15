@@ -127,9 +127,9 @@ such that it easily scales to a massive corpus.
   in one of the following four (non-equivalent) ways:
   \begin{enumerate}
     \item \(\theta(w) := \sqrt{wc(w)}\)
-    \item \(\theta(w) := \log_{10}(wc(w))\)
+    \item \(\theta(w) := \ln(wc(w))\)
     \item \(\theta(w) := \sqrt{dc(w)}\)
-    \item \(\theta(w) := \log_{10}(dc(w))\)
+    \item \(\theta(w) := \ln(dc(w))\)
   \end{enumerate}
   where:
   \[\text{wc, dc} : W \to \R_+\]
@@ -240,15 +240,157 @@ popular interest. Articles with high revision volumes have both a sizeable
 length and a considerable percentage of big changes made by users passionate
 about the given topic.
 
-\section{Beyond influential documents}
+\section{\ac{LSH} buckets}
+\label{sec:lsh-buckets}
 
-Dummy text.
+In this section we present a submodular function defined on the buckets that
+result from applying \acl{LSH} to the documents' tf-idf vectors. This function
+aims to increase the topic diversity of selected documents by selecting
+articles that cover multiple different buckets.
 
-\subsection{Definitions}
+\subsection{Definition}
 
-Dummy text.
+\begin{definition}[\ac{LSH} buckets]
+  \label{def:lsh-buckets}
+  Let:
+  \begin{align*}
+    &D := \text{ set of documents,} \\
+    &\B
+    \begin{aligned}[t]
+      :&= \{B_i \subseteq D | B_i := \ac{LSH} \text{ bucket } i\}.
+      &= \{B_1, B_2, \ldots, B_b\} \\
+    \end{aligned}
+  \end{align*}
+  Then we define:
+  \begin{align*}
+    &f : 2^D \to \R_+ \\
+    &f(S) := \sum_{i=1}^b |B_i| \cdot g(|S \cap B_i|),
+  \end{align*}
+  where:
+    \[g : \N \to \R_+ \text{ is concave.}\]
+\end{definition}
+
+\begin{proposition}
+  \label{prop:lsh-buckets}
+  \ac{LSH} buckets from Definition~\ref{def:lsh-buckets} is monotone
+  submodular. Proof in \todo{Appendix}.
+\end{proposition}
 
 \subsection{Rationale}
 
-Dummy text.
+\ac{LSH} buckets is a simple function designed to be combined with other
+submodular functions. The idea behind this function is that buckets group
+similar documents together (using a measure such as cosine similarity, for
+example).
+
+In this regard, buckets that have more articles represent denser clusters of
+pages, which we argue they define an important area or field.
+As a consequence we give higher importance -- a higher weight -- to dense
+buckets, multiplying by the size of the bucket: term \(|B_i|\).
+On the other hand, we also value documents that are in multiple buckets: term
+\(|S \cap B_i|\).
+Ideally, these pages cover more than one topic and, as such, are an important
+source of information if they are part of the summary.
+
+Describing the function as a whole, our objective is to have diversity by
+picking pages from different buckets while gauging both the importance of a
+bucket and the topic coverage of the articles themselves.
+
+\section{Scaling influential documents}
+\label{sec:scale-doc-influence}
+
+In Section~\vref{sec:doc-influence} we described the \emph{document influence}
+function proposed in \cite{sipos2012temporal}.
+While we can apply the function as it is to small corpora (up to a couple tens
+of thousands documents), in order to make it scale to Wikipedia's size --
+around 1.3 million human-written articles -- we have to make changes to part of
+the submodular function.
+
+Most of the general issues we had to solve are conceptual or engineering
+problems, such as:
+\begin{enumerate}
+  \item finding a suitable \emph{creation date / year};
+  \item finding the k-nearest neighbours for each document;
+  \item computing the two component functions:
+  \begin{itemize}
+    \item \(\theta(w, y)\) -- word spread.
+    \item \(\nu(d, w)\) -- document novelty;
+  \end{itemize}
+\end{enumerate}
+
+\paragraph{Creation date}
+To find a suitable \emph{creation date} in the case of web pages (more
+specifically, Wikipedia pages) is a much harder task than to finding the
+publishing date of a paper.
+In the case of Wikipedia we settled on using the \emph{last modified date} as
+an imperfect measure of creation date. A better approach is to find the most
+important revision and use that as the page's creation date \footnote{For more
+details about future work, see Section~\vref{sec:future-work}}.
+
+\paragraph{K-nearest-neighbours}
+Given the massive size of the corpora, we cannot use \ac{kNN} to compute the
+nearest neighbours. As a result, we employed using \ac{LSH} to approximately
+compute the 1-nearest neighbour of each page. The authors in
+\cite{sipos2012temporal} observe -- in their experimental results -- that
+selecting only one neighbour is sufficient for the purposes of this submodular
+function. Furthermore, using \ac{LSH} instead of an exact \ac{kNN} approach
+does not influence our results either.
+
+\paragraph{Component functions}
+As a result of the tf-idf matrix size, computing the two functions -- \(\nu(d,
+w)\) and \(\theta(w, y)\) -- has to be done in separate \aclp{MR} as part of
+the \emph{preprocessing} steps The same holds true for retrieving the creation
+date of each article.
+
+\section{Combining multiple submodular functions}
+
+In Section~\vref{sec:submod-functions} we mentioned
+Proposition~\ref{prop:linear-combinations} that allows us to combine multiple
+submodular functions together.
+However, there are two main problems that arise:
+\begin{enumerate}
+  \item choosing the \(\lambda_i\) parameters.
+  \item the functions have to be of the same magnitude -- ideally even grow
+  similarly;
+\end{enumerate}
+
+For the first problem we empirically try different hand-picked combinations.
+While there is an entire field of \ac{ML} that deals with \emph{parameter
+selection} we considered this to be outside the scope of this thesis.
+For the second problem, we present our solution in the next subsection.
+
+\subsection{Normalisation}
+
+Here we present a way to normalize the functions we defined in the sections
+above, so that one can (more) easily combine them using linear combinations.
+It is important to note that we can only divide the functions' expressions by
+constants with respect to \(S\) so that the functions remain \emph{monotone
+submodular}.
+
+\emph{Word coverage} and \emph{document influence} are already in a good spot
+because the tf-idf vectors are both normalized and very sparse and, as a
+consequence, the values remain small (\(< 1\)) even when summing then together.
+
+\paragraph{LSH buckets}
+In Definition~\vref{def:graph-coverage}, we defined \emph{LSH buckets} as: \(f(S) := \sum_{i=1}^b |B_i| \cdot g(|S \cap
+B_i|)\).  \(g(S \cap B_i\)) is bounded by \(g(B_i)\) and we can then take the
+weighted average with respect to \(|B_i|\). This results in:
+\[
+  f(S) :=
+    \frac{1}{\sum_{i=1}^b |B_i|} \cdot
+    \sum_{i=1}^b \left[ |B_i| \cdot \frac{g(|S \cap B_i|)}{g(|B_i|)} \right]
+\]
+that is always \(\leq 1\).
+
+\paragraph{Graph coverage}
+In Definition~\vref{def:lsh-buckets}, we defined \emph{graph coverage} as:
+\(f(S) := |\bigcup_{d \in S} V_d|\).
+This function is bounded by the number of vertices (documents): \(|D|\). This
+results in:
+\[
+  f(S) := \frac{|\bigcup_{d \in S} V_d|}{|D|}
+\]
+that is always \(\leq 1\).
+
+\paragraph{Beyond word coverage} \todo{Maybe write normalisation ?}
 
