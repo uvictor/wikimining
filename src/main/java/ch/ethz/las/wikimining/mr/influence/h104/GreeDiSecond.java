@@ -107,6 +107,7 @@ public class GreeDiSecond extends Configured implements Tool {
   private String datesPath;
   private String wordSpreadPath;
   private String docsSubsetPath;
+  private String info;
   private int selectCount;
 
   public GreeDiSecond() { }
@@ -119,7 +120,8 @@ public class GreeDiSecond extends Configured implements Tool {
     }
 
     JobConf config = new JobConf(getConf(), GreeDiSecond.class);
-    config.setJobName(String.format("Influence-GreeDiSecond[%s]", selectCount));
+    config.setJobName(
+        String.format("Influence-GreeDiSecond[%s %s]", info, selectCount));
 
     config.set(Fields.DOC_DATES.get(), datesPath);
     config.set(Fields.WORD_SPREAD.get(), wordSpreadPath);
@@ -163,6 +165,8 @@ public class GreeDiSecond extends Configured implements Tool {
     options.addOption(OptionBuilder.withArgName("path").hasArg()
         .withDescription("Selected docs subset").create(Fields.DOCS_SUBSET.get()));
 
+    options.addOption(OptionBuilder.withArgName("string").hasArg()
+        .withDescription("Job info").create(Fields.INFO.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Select count").create(Fields.SELECT_COUNT.get()));
 
@@ -191,6 +195,7 @@ public class GreeDiSecond extends Configured implements Tool {
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
     wordSpreadPath = cmdline.getOptionValue(Fields.WORD_SPREAD.get());
     docsSubsetPath = cmdline.getOptionValue(Fields.DOCS_SUBSET.get());
+    info = cmdline.getOptionValue(Fields.INFO.get());
 
     selectCount = Integer.parseInt(cmdline.getOptionValue(Fields.SELECT_COUNT.get()));
 

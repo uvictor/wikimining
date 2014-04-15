@@ -32,7 +32,7 @@ import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Computes tf-idf word spprocessContent according to equation 4.
+ * Computes tf-idf word spread according to equation 4.
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)
  */

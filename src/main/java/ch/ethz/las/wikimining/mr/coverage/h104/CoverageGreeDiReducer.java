@@ -34,7 +34,8 @@ import org.apache.log4j.Logger;
 public class CoverageGreeDiReducer extends MapReduceBase implements Reducer<
     IntWritable, DocumentWithVectorWritable, NullWritable, IntWritable> {
 
-  private static final Logger logger = Logger.getLogger(CoverageGreeDiReducer.class);
+  private static final Logger logger =
+      Logger.getLogger(CoverageGreeDiReducer.class);
 
   private HashMap<Integer, Long> wordCount;
   private int selectCount;
@@ -70,6 +71,9 @@ public class CoverageGreeDiReducer extends MapReduceBase implements Reducer<
       IntWritable outValue = new IntWritable(docId);
       output.collect(NullWritable.get(), outValue);
     }
+
+    reporter.incrCounter("ScoreX1mil", "word-coverage",
+          Math.round(objectiveFunction.compute(selected) * 1000000));
   }
 
   public static HashMap<Integer, Long> readWordCount(JobConf config) {

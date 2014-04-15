@@ -22,6 +22,8 @@ public class WordCoverageFromMahout implements ObjectiveFunction {
   protected final List<Integer> allDocIds;
   protected final Map<Integer, Vector> documents;
 
+  private final Vector globalMaxScores;
+
   /**
    * Creates an object used to compute the necessary word coverage score.
    */
@@ -44,6 +46,9 @@ public class WordCoverageFromMahout implements ObjectiveFunction {
       allDocIds.add(id);
       documents.put(id, tfIdfs);
     }
+
+    final int cardinality = documents.get(allDocIds.get(0)).size();
+    globalMaxScores = new RandomAccessSparseVector(cardinality);
   }
 
   /**
@@ -80,6 +85,36 @@ public class WordCoverageFromMahout implements ObjectiveFunction {
     }
 
     return maxScores;
+  }
+
+  /**
+   * Get max tf-idfs for each term for all docIds documents, when adding docId
+   * to already existing documents.
+   *
+   * @deprecated not used
+   */
+  protected Vector getGlobalMaxScores(Integer docId) {
+    final Vector maxScores = new RandomAccessSparseVector(globalMaxScores);
+    for (final Element element : documents.get(docId).nonZeroes()) {
+      if (element.get() > maxScores.get(element.index())) {
+        maxScores.setQuick(element.index(), element.get());
+      }
+    }
+
+    return maxScores;
+  }
+
+  /**
+   * Add a doc id for the lazy getGlobalMaxScores method.
+   *
+   * @deprecated not used
+   */
+  public void addDocId(Integer docId) {
+    for (final Element element : documents.get(docId).nonZeroes()) {
+      if (element.get() > globalMaxScores.get(element.index())) {
+        globalMaxScores.setQuick(element.index(), element.get());
+      }
+    }
   }
 
   protected double computeScore(Vector maxScores) {

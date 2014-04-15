@@ -70,6 +70,7 @@ public class GreeDiFirst extends Configured implements Tool {
   private String outputPath;
   private String datesPath;
   private String wordSpreadPath;
+  private String info;
   private int partitionCount;
   private int selectCount;
 
@@ -84,7 +85,7 @@ public class GreeDiFirst extends Configured implements Tool {
 
     JobConf config = new JobConf(getConf(), GreeDiFirst.class);
     config.setJobName(String.format(
-        "Influence-GreeDiFirst[%s %s]", partitionCount, selectCount));
+        "Influence-GreeDiFirst[%s %s %s]", info, partitionCount, selectCount));
 
     config.set(Fields.DOC_DATES.get(), datesPath);
     config.set(Fields.WORD_SPREAD.get(), wordSpreadPath);
@@ -126,6 +127,8 @@ public class GreeDiFirst extends Configured implements Tool {
         .withDescription("Word spread yearly matrix")
         .create(Fields.WORD_SPREAD.get()));
 
+    options.addOption(OptionBuilder.withArgName("string").hasArg()
+        .withDescription("Job info").create(Fields.INFO.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
         .withDescription("Partition count").create(Fields.PARTITION_COUNT.get()));
     options.addOption(OptionBuilder.withArgName("integer").hasArg()
@@ -154,6 +157,7 @@ public class GreeDiFirst extends Configured implements Tool {
     outputPath = cmdline.getOptionValue(Fields.OUTPUT.get());
     datesPath = cmdline.getOptionValue(Fields.DOC_DATES.get());
     wordSpreadPath = cmdline.getOptionValue(Fields.WORD_SPREAD.get());
+    info = cmdline.getOptionValue(Fields.INFO.get());
 
     partitionCount = Defaults.PARTITION_COUNT.get();
     if (cmdline.hasOption(Fields.PARTITION_COUNT.get())) {

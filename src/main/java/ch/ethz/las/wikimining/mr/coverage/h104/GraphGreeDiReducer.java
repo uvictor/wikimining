@@ -44,8 +44,8 @@ public class GraphGreeDiReducer extends MapReduceBase implements Reducer<
   public void configure(JobConf config) {
     try {
       final FileSystem fs = FileSystem.get(config);
-      final Path bucketsPath = new Path(config.get(Fields.GRAPH.get()));
-      graphReader = new IntArraySequenceFileReader(bucketsPath, fs, config);
+      final Path graphPath = new Path(config.get(Fields.GRAPH.get()));
+      graphReader = new IntArraySequenceFileReader(graphPath, fs, config);
     } catch (IOException e) {
       logger.fatal("Error loading graph!", e);
     }
@@ -83,5 +83,8 @@ public class GraphGreeDiReducer extends MapReduceBase implements Reducer<
       IntWritable outValue = new IntWritable(docId);
       output.collect(NullWritable.get(), outValue);
     }
+
+    reporter.incrCounter("ScoreX1mil", "graph-coverage",
+          Math.round(graphCoverage.compute(selected) * 1000000));
   }
 }

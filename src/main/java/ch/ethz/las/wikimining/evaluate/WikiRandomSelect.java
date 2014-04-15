@@ -14,7 +14,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Logger;
 
 /**
- * Randomly selects Wiki pages, given the document dates file
+ * Randomly selects Wiki pages, given the tf-idf vectors file
  * (for retrieving the ids).
  *
  * @author Victor Ungureanu (uvictor@student.ethz.ch)

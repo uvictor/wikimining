@@ -45,12 +45,12 @@ public class GraphCoverage implements ObjectiveFunction {
       coverage.add(docId);
       final List<Integer> current = graph.get(docId);
       if (current != null) {
-        coverage.addAll(graph.get(docId));
+        coverage.addAll(current);
       } else {
         logger.info("No inlinks for docid " + docId);
       }
     }
 
-    return (double) coverage.size() / totalCount;
+    return coverage.size();
   }
 }

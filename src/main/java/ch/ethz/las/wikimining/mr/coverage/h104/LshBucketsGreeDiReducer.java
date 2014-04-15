@@ -87,5 +87,8 @@ public class LshBucketsGreeDiReducer extends MapReduceBase implements Reducer<
       IntWritable outValue = new IntWritable(docId);
       output.collect(NullWritable.get(), outValue);
     }
+
+    reporter.incrCounter("ScoreX1mil", "lsh-buckets",
+          Math.round(combiner.compute(selected) * 1000000));
   }
 }

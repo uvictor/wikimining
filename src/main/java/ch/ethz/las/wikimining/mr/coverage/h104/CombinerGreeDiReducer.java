@@ -140,9 +140,9 @@ public class CombinerGreeDiReducer extends MapReduceBase implements Reducer<
       wordCoverage.setUseInlinks(useInlinks);
       wordCoverage.setUseRevisionCount(useRevisionCount);
       wordCoverage.setUseRevisionVolume(useRevisionVolume);
-      reporter.incrCounter("ScoreX100",
+      reporter.incrCounter("ScoreX1mil",
           useInlinks + "-" + useRevisionCount + "-" + useRevisionVolume,
-          Math.round(wordCoverage.compute(selected) * 10000));
+          Math.round(wordCoverage.compute(selected) * 1000000));
     }
   }
 }

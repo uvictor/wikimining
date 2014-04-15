@@ -80,5 +80,8 @@ public class GreeDiReducer extends MapReduceBase implements Reducer<
       IntWritable outValue = new IntWritable(docId);
       output.collect(NullWritable.get(), outValue);
     }
+
+    reporter.incrCounter("ScoreX1mil", "influence",
+          Math.round(objectiveFunction.compute(selected) * 1000000));
   }
 }
