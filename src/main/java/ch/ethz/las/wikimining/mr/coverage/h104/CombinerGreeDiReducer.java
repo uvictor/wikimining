@@ -101,7 +101,7 @@ public class CombinerGreeDiReducer extends MapReduceBase implements Reducer<
     /*final LshBuckets lshBuckets = new LshBuckets(buckets);
     logger.info("Created LshBuckets");*/
 
-    final HashSet<Integer> docIds = new HashSet(wordCoverage.getAllDocIds());
+    final HashSet<Integer> docIds = new HashSet<>(wordCoverage.getAllDocIds());
 
     final HashMap<Integer, ArrayList<Integer>> graph;
     graphReader.setDocIds(docIds);
