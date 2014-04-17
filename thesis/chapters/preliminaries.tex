@@ -1,16 +1,47 @@
 \chapter{Preliminaries}
 
-Dummy text.
-
 \section{Term frequency - inverse document frequency}
 
-Dummy text.
+\emph{Term frequency - inverse document frequency (tf-idf)}
+\cite{salton1988term} is a popular measure in \emph{information retrieval} that
+captures the importance of a word within a given document (from a corpus).
+It is computed based on two different weights:
+\begin{description}
+  \item[Term frequency -- tf(d, w)] measures the frequency of a word in a
+  document (usually normalised by taking the square root, logarithm or more
+  complex methods);
+  \item[Inverted document frequency -- idf(d, w)] measures the rarity of a term
+  within the corpus -- it is defined as the total number of documents divided
+  by the number of documents in which the word appears (usually normalised by
+  taking the logarithm).
+\end{description}
+The final \emph{tf-idf} value is obtained by multiplying the two weights
+defined above:
+\[ \text{tf-idf}(d, w) = \text{tf}(d, w) \cdot \text{idf}(d, w). \]
 
 \section{Cosine similarity}
 
-Dummy text.
+The \emph{cosine similarity} of two vectors is defined as the angle between
+made by the two vectors.
+Formally, cosine similarity is defined as:
+\[\cos(\theta) = \frac{\vec{u} \cdot \vec{v}}{\|\vec{u}\| \cdot \|\vec{v}\|}\]
+or if the vectors are normalized simply as the dot product between of the two
+vectors:
+\[\cos(\theta) = \vec{u} \cdot \vec{v}.\]
 
 \section{Locality-sensitive hashing}
 
-Dummy text.
+\emph{\ac{LSH}} \cite{rajaraman2012mining} is a method to put similar elements
+into the same bucket with high probability. This is achieved by using hash
+functions that, instead of trying to uniformly distributed the elements among
+all buckets, are specifically designed to hash similar document to the same
+value with high probability.
+A lot of similarity measures (or distances) have an associated
+locality-sensitve hash functions. For \emph{cosine similarity}, we use the
+following hash function based on random projections:
+\begin{align*}
+  \text{hash}(\vec{v}) &= \text{sgn}(\vec{v} \cdot \vec{r}), \\
+  &\text{where \(\vec{v}\) is the input vector} \\
+  &\text{and \(\vec{r}\) is a random projection.}
+\end{align*}
 

@@ -1,8 +1,67 @@
 \chapter{Introduction}
 
-Dummy text.
+As a result of the volume of content that exists today on the internet, it has
+become increasingly harder for content creators and consumers alike to manage
+this content in a centralised manner. One such example is Wikipedia which is
+very hard to analyse and digest at a general level, mainly because of its
+prohibitive large size. We aim to discover what are the most important
+Wikipedia articles and how articles evolve in popularity and influence over
+time. At a smaller scale, we investigate these same problems on specific
+categories.
 
-\section{Contributions}
+Attempts to analyse Wikipedia have also been made in the past: quantitative
+measures \cite{voss2005measuring}, semantic coverage
+\cite{holloway2007analyzing}, but these studies were made back when Wikipedia
+was a lot smaller than it is today and none of these papers deal with detecting
+influential articles (using submodular function maximisation). More often
+Wikipedia was used in natural language processing, especially for computing
+semantic relatedness based on the Wikipedia categories
+\cite{gabrilovich2007computing}, but these kind of papers deal only indirectly
+with analysing Wikipedia itself.
 
-Dummy text.
+We define our problem as follows: given a very large corpus of documents --
+such as Wikipedia -- find a way to pick the most representative articles that
+best encompass the most important topics. One of the main challenges is that
+the nature of the problem is subjective because the notion of importance varies
+from person to person. Some more concrete objectives are to find popular
+articles -- how visited, how interlinked a page is -- or debated articles --
+how changed the articles is or, in the case of Wikipedia, how many revisions
+does it have.
+
+We can interpret the problem defined in the previous paragraph as a variant of
+multi-document summarisation, but its setting is different in various regards.
+First of all, the corpus is much bigger than the classical datasets.
+Secondly, the number of selected documents is very small -- only
+\emph{\(1/10000\)th or smaller} fraction of the whole corpus. For Wikipedia, we
+select between \(40\) and \(130\) articles from over {\(1.3\) million}
+human-written pages. We call the problem of selecting very few documents from
+an extremely large corpus: \emph{massive corpus summarisation}.  In order to
+study the evolution of the Wikipedia network and find representative subsets,
+we investigate different solutions using submodular function maximisation. We
+adapt existing submodular functions from the literature and define new
+functions to solve this problem.
+
+Another challenge is scaling our algorithms to deal with such a large dataset.
+We devise a framework -- WikiMining -- that can scale up to Wikipedia’s size,
+using the Distributed Submodular Maximisation (GreeDi) protocol
+\cite{mirzasoleiman2013distributed} over MapReduce \cite{dean2008mapreduce}. To
+compare the different approaches we devise a simple procedure to evaluate the
+quality of my algorithms.
+
+\subsubsection{Contributions}
+
+We have the following main contributions:
+\begin{itemize}
+  \item We define novel monotone submodular functions, that capture
+  \emph{document importance}, to summarise massive corpora better than existing
+  functions;
+  \item We create a framework that scales to millions of documents, using
+  GreeDi \cite{mirzasoleiman2013distributed} and MapReduce
+  \cite{dean2008mapreduce};
+  \item We extend, for the first time, multi-document summarisation to a
+  massive corpora -- such as Wikipedia -- using submodular function
+  maximisation;
+  \item We use simple evaluation metrics to cross-check the different
+  submodular functions;
+\end{itemize}
 

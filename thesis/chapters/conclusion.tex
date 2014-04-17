@@ -1,9 +1,46 @@
 \chapter{Conclusion}
 
-Dummy text.
+We introduce previously suggested methods for multi-document summarisation,
+such as \emph{word coverage} and \emph{document influence}, and showed how we
+can scale them to massive corpora that have over a million articles.
+We define novel submodular functions that capture \emph{graph coverage},
+\emph{\ac{LSH} buckets} and extend \emph{word coverage} to take into account
+the \emph{number of inlinks} and \emph{revisions' statistics}.
+We also experiment with different non-negative linear combinations of
+multiple submodular functions.
+We devise a framework -- WikiMining -- that can easily be used to test
+different submodular functions on massive corpora and also extended to analyse
+large datasets, such as Wikipedia.
+We offer comparisons for different submodular functions (both novel and from
+other papers) that provide a baseline for further research in finding the most
+important documents in a massive corpora.
 
-\section{Future work}
+\subsubsection{Future work}
 \label{sec:future-work}
 
-Dummy text.
+An important area that has to be addressed is finding better \emph{evaluation}
+methods that are easy to visualise, while they are being computationally
+feasible.
+One reliable choice is to crowd source scoring of different chosen sets of
+documents.
+However, one must investigate what is the best setting in the case of Wikipedia
+as evaluation is multi-faceted problem.
+
+Another important area involves finding new \emph{submodular
+functions} and improving the existing ones.
+For example, it is computationally expensive to retrieve a reliable
+\emph{creation date} for Wikipedia's articles as one has to go through all the
+revisions.
+Also, there are better ways to compute the \emph{importance of a word and
+document} -- heuristically \cite{lin2010multi} or by learning
+\cite{sipos2012large} -- as suggested by Sipos et al \cite{sipos2012temporal}.
+
+Last, but not the least, using MapReduce for \acl{ML} tasks is a poorer choice
+as MapReduce was designed for passing through dath a small number of times --
+one or two times.
+A much better choice is \emph{Spark} that builds on top of Hadoop and \ac{HDFS}
+and provides the ability to cache the data in \ac{RAM} between different
+MapReduce stages among many other tricks.
+Put together Spark's optimisations significantly speed up the computations,
+especially in our case of high number of MapReduce stages.
 

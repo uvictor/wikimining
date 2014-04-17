@@ -303,7 +303,7 @@ We implement the following reducers:
 \subsection{Influence \aclp{MR}}
 
 The influence classes, from package
-\emph{ch.ethz.las.wikimining.mr.influence[.h104]} can also be split in the same
+\emph{ch.ethz.las.wikimining.mr.influence[.h104]}, can also be split in the same
 three categories as the coverage classes:
 \begin{enumerate}
   \item preprocessing classes;
@@ -342,9 +342,38 @@ We implement the following reducers:
 
 \subsection{Selection and evaluation}
 
-Dummy text.
+Classes from  package \emph{ch.ethz.las.wikimining.evaluate} deal with
+selecting single or multiple Wikipedia categories and offer basic capabilities
+to analyze the results.
+
+The most important classes of this package are:
+\begin{description}
+  \item[WikiRandomSelect] Given the tf-idf vectors file -- needed to get the
+  document ids -- randomly samples (with replacement) a given number of
+  Wikipedia articles;
+  \item[WikiExtractor] Given the categories names as arguments it extracts the
+  requested categories and saves them in sequence file format;
+  \item[WikiCountInlinks] Converts a list of articles ids into a list of
+  (article name, number of inlinks) pairs, using \ac{JWPL}.
+\end{description}
 
 \subsection{Input, output}
 
-Dummy text.
+Classes from package \emph{ch.ethz.las.wikimining.mr.io.h104} simplify the way
+one can deal with Hadoop \ac{IO}.
+It offers \textbf{SetupHelper} class to easily set the desired input and output
+format for Hadoop and a lot of \emph{SequenceFileProcessor} classes to read
+(and write) different \emph{sequence file}.
+Some examples include:
+\begin{description}
+  \item[BucketsSequenceFileReader] Reads (HashBandWritable, IntArrayWritable)
+  pairs, used for the \emph{\ac{LSH} buckets} function \footnote{See
+  Section~\vref{sec:lsh-buckets}};
+  \item[IntLongSequenceFileReader] Reads (IntWritable, LongWritable) pairs,
+  used in multiple classes;
+  \item[TextVectorSequenceFileReader] Reads (Text, VectorWritable) pairs, used
+  in multiple classes to read the \emph{tf-idf vectors};
+  \item[TextVectorSequenceFileWriter] Writes (Text, VectorWritable) pairs, used
+  to output the \emph{novelty vectors} \footnote{See Section~\vref{sec:doc-influence} and Section~\vref{sec:scale-doc-influence}}.
+\end{description}
 
