@@ -1,23 +1,22 @@
 \chapter{Experiments}
+\label{cap:experiments}
 
 In this chapter we present our results and compare them to existing approaches.
 
 \section{Datasets and metrics}
 
-Dummy text.
-
 \subsection{Datasets}
 
 To get the Wikipedia pages, we use the dump from \emph{01 October 2012} that
-has only the latest revision for each article \todo{Footnote for where to get
-it}. The dump version we use should not impact the results considerably. We
-happen to use the 2012 version just because was easily available at the time.
+has only the latest revision for each article. The dump version we use should
+not impact the results considerably. We happen to use the 2012 version just
+because it was easily available at the time.
 For this Wikipedia version we extract articles corresponding to a category (or
 multiple categories recursively) recursively -- we parse the category graph
 downwards starting from the given \emph{root} category. After extracting the
 articles we keep only non-stub, human-written articles and we exclude all meta
 pages. For more information about the extraction process see
-\todo{coverage.WikiToPlainText section}.
+Section~\vref{sec:sys-arch}.
 
 We tested our approach on the following recursively extracted categories:
 \begin{description}
@@ -38,10 +37,10 @@ and merges of them:
   \item[All 4] Contains the \(8793\) articles of all above categories
   (Composers, Game \ac{AI}, Machine learning, Vectors).
 \end{description}
-For the final results we use the \textbf{2012 Wikipedia} which has a total of
-\(1.3\) million \todo{double check this number} non-stub, human-written
-articles (excluding meta pages). Out of space considerations we only present
-the results we get on the whole Wikipedia.
+For the final results we use the \textbf{2012 Wikipedia} which has slightly
+over \(1.3\) million non-stub, human-written articles (excluding meta pages).
+Out of space considerations we only present the results we get on the whole
+Wikipedia.
 
 In addition to the Wikipedia subset, we use the \emph{\acf{NIPS}} dataset --
 contains \(1955\) papers -- and the \emph{\acf{ACL}} dataset -- contains
@@ -58,13 +57,11 @@ Some of the possible metrics are:
   \item[Number of inlinks] This metric is similar to the use of \emph{number of
   citations} presented in \cite{sipos2012temporal}, but extended to web pages.
   While it does not have the same limitations as citations, it is hard to
-  guarantee its validity \todo{citation needed}.
+  guarantee its validity;
   \item[PageRank] A common way to extend the use of just inlinks which solves a
-  lot of the problems with inlinks.
-  \todo{citation needed}.
+  lot of the problems with inlinks \cite{page1999pagerank};
   \item[Condensed Wikipedia] Count the number of selected documents that appear
-  in a condensed Wikipedia version used in education or in emph{Wikispeedia}
-  \todo{citation needed}.
+  in a condensed Wikipedia version used in education.
 \end{description}
 
 For the purposes of this thesis we use \emph{number of inlinks} as we view
@@ -132,7 +129,7 @@ We consider three baselines:
 To generate the random sets we sample without replacement \(40\) articles from
 among the \(1.3\) \emph{million} human-written Wikipedia articles. We repeat
 the process \(10\) times and report the \emph{mean} along with one
-standard-deviation bars. \todo{Add the stdev bars.}
+standard-deviation bars.
 
 \begin{figure}
   \centering
@@ -174,6 +171,8 @@ We present the \emph{functions scores} in Figure~\ref{img:wc} and the \emph{top
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{word coverage} function.}
+    \label{tab:wc}
     \begin{tabular}{lll}
     1  & History of Western civilization                  & 115   \\
     2  & Stephen Tompkinson                               & 78    \\
@@ -196,8 +195,6 @@ We present the \emph{functions scores} in Figure~\ref{img:wc} and the \emph{top
     19 & Australian of the Year                           & 232   \\
     20 & Largest organisms                                & 41    \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{word coverage} function.}
-    \label{tab:wc}
 \end{table}
 
 \subsection{Document influence}
@@ -215,6 +212,9 @@ We present the \emph{functions scores} in Figure~\ref{img:infl} and the
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{document influence}
+    function.}
+    \label{tab:infl}
     \begin{tabular}{lll}
     1  & History of virtual learning environments in the 1990s & 1   \\
     2  & The Idler (1758–1760)                                 & 32  \\
@@ -237,9 +237,6 @@ We present the \emph{functions scores} in Figure~\ref{img:infl} and the
     19 & Facility information model                            & 2   \\
     20 & Nationality Rooms                                     & 833 \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{document influence}
-    function.}
-    \label{tab:infl}
 \end{table}
 
 As you can see from the graphs and tables for \emph{word coverage} and
@@ -269,6 +266,8 @@ linked-to a lot.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{graph coverage} function.}
+    \label{tab:graph}
     \begin{tabular}{lll}
     1  & Geographic coordinate system       & 759441 \\
     2  & Citation needed                    & 637433 \\
@@ -291,8 +290,6 @@ linked-to a lot.
     19 & Australia                          & 125675 \\
     20 & Given name                         & 27087  \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{graph coverage} function.}
-    \label{tab:graph}
 \end{table}
 
 \section{\ac{LSH} buckets and word coverage}
@@ -314,6 +311,8 @@ coverage + LSH buckets} performs similarly to using just \emph{word coverage}.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{LSH buckets} function.}
+    \label{tab:wc+lsh}
     \begin{tabular}{lll}
     1  & History of Western civilization                              & 115  \\
     2  & Stephen Tompkinson                                           & 78   \\
@@ -336,8 +335,6 @@ coverage + LSH buckets} performs similarly to using just \emph{word coverage}.
     19 & 2012 in film                                                 & 736  \\
     20 & Independence National Historical Park                        & 359  \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{LSH buckets} function.}
-    \label{tab:wc+lsh}
 \end{table}
 
 \section{Beyond word coverage}
@@ -356,6 +353,9 @@ Figure~\ref{img:rc} and the \emph{top 20} articles in Table~\ref{tab:rc}.
 \end{figure}
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- revisions count}
+function.}
+    \label{tab:rc}
     \begin{tabular}{lll}
     1  & George W. Bush      & 11525  \\
     2  & United States       & 508227 \\
@@ -378,9 +378,6 @@ Figure~\ref{img:rc} and the \emph{top 20} articles in Table~\ref{tab:rc}.
     19 & PlayStation 3       & 3696   \\
     20 & 2006 FIFA World Cup & 3072   \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- revisions count}
-function.}
-    \label{tab:rc}
 \end{table}
 
 We present the \emph{tf-idf \(\cdot\) number-of-revisions \(\cdot\)
@@ -395,6 +392,9 @@ Table~\ref{tab:rc-rv}.
 \end{figure}
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- revisions count
+-- revisions volume} function.}
+    \label{tab:rc-rv}
     \begin{tabular}{lll}
     1  & George W. Bush    & 11525  \\
     2  & United States     & 508227 \\
@@ -417,9 +417,6 @@ Table~\ref{tab:rc-rv}.
     19 & Global warming    & 3832   \\
     20 & Christianity      & 17145  \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- revisions count
--- revisions volume} function.}
-    \label{tab:rc-rv}
 \end{table}
 
 We present the \emph{tf-idf \(\cdot\) number-of-inlinks \(\cdot\)
@@ -435,6 +432,9 @@ Table~\ref{tab:inl-rv}.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count --
+revisions volume} function.}
+    \label{tab:inl-rv}
     \begin{tabular}{lll}
     1  & United States                      & 508227 \\
     2  & Geographic coordinate system       & 759441 \\
@@ -457,9 +457,6 @@ Table~\ref{tab:inl-rv}.
     19 & Animal                             & 133644 \\
     20 & Association football               & 96447  \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count --
-revisions volume} function.}
-    \label{tab:inl-rv}
 \end{table}
 
 We present the \emph{tf-idf \(\cdot\) number-of-inlinks \(\cdot\)
@@ -475,6 +472,9 @@ in Table~\ref{tab:inl-rc}.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count --
+revisions count} function.}
+  \label{tab:inl-rc}
     \begin{tabular}{lll}
     1  & United States        & 508227 \\
     2  & United Kingdom       & 181525 \\
@@ -497,9 +497,6 @@ in Table~\ref{tab:inl-rc}.
     19 & World War I          & 47384  \\
     20 & Brazil               & 73972  \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count --
-revisions count} function.}
-  \label{tab:inl-rc}
 \end{table}
 
 We present the \emph{tf-idf \(\cdot\) number-of-inlinks} in
@@ -514,6 +511,9 @@ Figure~\ref{img:inl} and the \emph{top 20} articles in Table~\ref{tab:inl}.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count}
+function.}
+    \label{tab:inl}
     \begin{tabular}{lll}
     1  & United States                      & 508227 \\
     2  & Geographic coordinate system       & 759441 \\
@@ -536,9 +536,6 @@ Figure~\ref{img:inl} and the \emph{top 20} articles in Table~\ref{tab:inl}.
     19 & Record producer                    & 119573 \\
     20 & Italy                              & 115868 \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count}
-function.}
-    \label{tab:inl}
 \end{table}
 
 We present the \emph{tf-idf \(\cdot\) revisions-volume} in Figure~\ref{img:rv}
@@ -553,6 +550,9 @@ and the \emph{top 20} articles in Table~\ref{tab:rv}.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- revisions volume}
+function.}
+    \label{tab:rv}
     \begin{tabular}{lll}
     1  & George W. Bush           & 11525  \\
     2  & World War I              & 47384  \\
@@ -575,9 +575,6 @@ and the \emph{top 20} articles in Table~\ref{tab:rv}.
     19 & Association football     & 96447  \\
     20 & Evolution                & 3867   \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- revisions volume}
-function.}
-    \label{tab:rv}
 \end{table}
 
 We present the \emph{tf-idf \(\cdot\) number-of-inlinks \(\cdot\)
@@ -593,6 +590,9 @@ and the \emph{top 20} articles in Table~\ref{tab:inl-rc-rv}.
 
 \begin{table}
     \centering
+    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count --
+    revisions count -- revisions volume} function.}
+    \label{tab:inl-rc-rv}
     \begin{tabular}{lll}
     1  & United States        & 508227 \\
     2  & United Kingdom       & 181525 \\
@@ -615,9 +615,6 @@ and the \emph{top 20} articles in Table~\ref{tab:inl-rc-rv}.
     19 & Spain                & 90482  \\
     20 & Brazil               & 73972  \\
     \end{tabular}
-    \caption {Top 20 articles selected by the \emph{tf-idf -- inlinks count --
-revisions count -- revisions volume} function.}
-  \label{tab:inl-rc-rv}
 \end{table}
 
 \section{Running time}

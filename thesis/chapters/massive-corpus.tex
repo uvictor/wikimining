@@ -30,8 +30,8 @@ functions so that they yield satisfying results for such a large
 Wikipedia). On other hand, we can no longer run sequentially; so, in turn, we
 will employ having all algorithms written in a \emph{MapReduce}
 \cite{dean2008mapreduce} distributed fashion. If you are interested in more
-details about the framework we implemented please refer to Chapter~\vref{}
-\todo{Implementation chapter}.
+details about the framework we implemented please refer to
+Chapter~\vref{cap:wikimining}.
 
 \section{Scaling influential documents}
 \label{sec:scale-doc-influence}
@@ -108,8 +108,20 @@ neighbouring articles.
 \begin{proposition}
   \label{prop:graph-coverage}
   Graph coverage from Definition~\ref{def:graph-coverage} is monotone
-  submodular. Proof in \todo{Appendix}.
+  submodular.
+  \begin{proof}
+    Easily proven as it can be reduced to the coverage function presented in
+    Definition~\vref{def:set-coverage}.
+  \end{proof}
 \end{proposition}
+
+In Figure~\ref{fig:graph-cov} we offer a visual representation of this function.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth,natwidth=1671,natheight=731]{images/graph-cov.png}
+  \caption{Visual representation of \emph{graph coverage} submodular function.}
+  \label{fig:graph-cov}
+\end{figure}
 
 \subsection{Rationale}
 
@@ -158,8 +170,21 @@ articles that cover multiple different buckets.
 \begin{proposition}
   \label{prop:lsh-buckets}
   \ac{LSH} buckets from Definition~\ref{def:lsh-buckets} is monotone
-  submodular. Proof in \todo{Appendix}.
+  submodular.
+  \begin{proof}
+    Easily provable using the properties of submodular functions
+    \cite{krause2012submodular}.
+  \end{proof}
 \end{proposition}
+
+In Figure~\ref{fig:lsh-buckets} we offer a visual representation of this
+function.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\textwidth,natwidth=426,natheight=535]{images/lsh-buckets.png}
+  \caption{Visual representation of \emph{LSH buckets} submodular function.}
+  \label{fig:lsh-buckets}
+\end{figure}
 
 \subsection{Rationale}
 
@@ -187,8 +212,8 @@ bucket and the topic coverage of the articles themselves.
 In Section~\vref{sec:word-coverage} we introduced \emph{word coverage} as a
 measure of information coverage based on words that tries to avoid eccentric
 documents.
-However, as you can see from our results in Chapter~\vref{} \todo{Results
-chapter}, \emph{word coverage} performs poorer than expected when scaled to
+However, as you can see from our results in Chapter~\vref{cap:experiments},
+\emph{word coverage} performs poorer than expected when scaled to
 \emph{Wikipedia}'s size (millions of documents).
 In this, chapter we modify the function such that it takes into account more
 information about documents when comparing them.
@@ -219,8 +244,9 @@ Let:
 
 Word importance is the weight we give to a word in terms of its meaning. As we
 mentioned before, there has been significant work done on how to properly
-define it \cite{}\todo{Citation needed}. Here we use some of the basic metrics
-such that it easily scales to a massive corpus.
+define it \cite{sipos2012temporal} \cite{lin2010multi} \cite{sipos2012large}.
+Here we use some of the basic metrics such that it easily scales to a massive
+corpus.
 
 \begin{definition}[Word importance]
   \label{def:word-importance}
@@ -243,7 +269,7 @@ such that it easily scales to a massive corpus.
   \end{align*}
 \end{definition}
 Functions \(wc(w)\) and \(dc(w)\) are functions needed to define tf-idf
-\cite{}\todo{tf-idf paper}:
+\cite{salton1988term}:
 \begin{itemize}
   \item \(wc(w)\) stands for \emph{word count} and
     represents the number of times word \(w\) appears in the whole corpus;
@@ -263,8 +289,7 @@ consider some of the different metrics one can use for this task.
   \label{def:coverage-of-word}
   We define coverage of a word
   \[\phi : D \times W \to \R_+\]
-  in one of the following (non-equivalent) ways \todo{Find a better
-  notation}:
+  in one of the following (non-equivalent) ways:
   \begin{align*}
     \phi(d, w) = \text{tf-idf}(d, w)\, &[\cdot\, \text{\#inlinks}(d)] \\
         &[\cdot\, \text{\#revisions}(d)] \\
@@ -306,9 +331,9 @@ distinct concepts.
 
 One of them is merging \emph{graph coverage} presented in
 Section~\ref{sec:graph-coverage} with \emph{word coverage}.
-This can be achieved, and we present the way it can be done it Section
-\todo{Combining multiple submodular functions}, but we could not find
-appropriate parameters to use that approach.
+This can be achieved, and we present the way it can be done it
+Section~\ref{sec:combine}, but we could not find appropriate parameters to use
+that approach.
 
 The other is seeing inlinks as a citations measure.
 This has been used somewhat successfully in web ranking and it has since
@@ -392,6 +417,4 @@ results in:
   f(S) := \frac{|\bigcup_{d \in S} V_d|}{|D|}
 \]
 that is always \(\leq 1\).
-
-\paragraph{Beyond word coverage} \todo{Maybe write normalisation ?}
 

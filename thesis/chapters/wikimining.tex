@@ -1,4 +1,5 @@
 \chapter{WikiMining framework design}
+\label{cap:wikimining}
 
 The framework is in an \emph{alpha} development state. While all the described
 functionality is implemented and works accordingly, you might sometimes find
@@ -9,7 +10,8 @@ standard that will allow you to perform both of the above tasks with ease.
 
 \section{External libraries}
 
-Dummy text.
+As part of the WikiMining we use multiple external libraries that we quickly
+describe in the following subsections.
 
 \subsection{Java Wikipedia Library}
 
@@ -23,21 +25,24 @@ information concerning Wikipedia including, but not limited to:
 \end{itemize}
 
 \paragraph{How it works?} Given a Wikipedia dump - that can be downloaded from
-\todo{http://dumps.wikimedia.org/} - it generates \(11\) text files that can
-then be imported into a MySQL databased and accessed through the \ac{JWPL}
-\ac{API}. You can find more details about using \ac{JWPL} on their website
-\todo{https://code.google.com/p/jwpl/wiki/DataMachine}.
+\url{http://dumps.wikimedia.org/} (accessed on 17.04.2014)i - it
+generates \(11\) text files that can then be imported into a MySQL databased
+and accessed through the \ac{JWPL} \ac{API}.
+You can find more details about using \ac{JWPL} on their website
+\footnote{\url{https://code.google.com/p/jwpl/wiki/DataMachine} (accessed on
+17.04.2014) }.
 
-The library is publicly available \todo{https://code.google.com/p/jwpl/} and
+The library is publicly available
+\footnote{\url{https://code.google.com/p/jwpl/} (accessed on 17.04.2014)} and
 its authors wrote a paper \cite{zesch2008jwpl} providing further insights into
-its inner workings. For the purposes of this thesis we use \emph{\ac{JWPL}
-0.9.2}.
+how it works. For the purposes of this thesis we use \emph{\ac{JWPL} 0.9.2}.
 
 \subsection{Hadoop}
 
 \emph{Hadoop} is an open-source project that aims to offer solutions for
-'reliable, scalable, distributed computing' \todo{http://hadoop.apache.org/}.
-Although the whole system is more complex we mainly use two of its components:
+'reliable, scalable, distributed computing'
+\footnote{\url{http://hadoop.apache.org/} - accessed on 17.04.2014)}.  Although
+the whole system is more complex we mainly use two of its components:
 \begin{itemize}
   \item \acl{MR}
   \item \acl{HDFS}
@@ -69,7 +74,6 @@ fault-tolerant and free from other distributed computing problems (such as
 synchronisation concerns, deadlocks etc.).
 If you are interested in learning more about \acf{MR} we recommend reading the
 paper \cite{dean2008mapreduce} written by its proponents.
-\missingfigure{MapReduce stages}
 
 \subsubsection{Hadoop Distributed File System}
 
@@ -95,7 +99,11 @@ In this thesis we use the Wikipedia \ac{API} to convert the \ac{XML} dumps to
 Hadoop \emph{sequence files} indexed by \emph{document id}. This allows us to
 easily find specific Wikipedia pages and process their content.
 
-If you want to find out more about \cloud visit their website \todo{http://lintool.github.io/cloud} or check their Wikipedia \ac{API} \todo{http://lintool.github.io/cloud/docs/content/wikipedia.html}. In this thesis we use \emph{\cloud version 1.5.0}.
+If you want to find out more about \cloud, visit their website
+\footnote{\url{http://lintool.github.io/cloud} (accessed on 17.04.2014)} or
+check their Wikipedia \ac{API}
+\footnote{\url{http://lintool.github.io/cloud/docs/content/wikipedia.html}
+(accessed on 17.04.2014)}. In this thesis we use \emph{\cloud version 1.5.0}.
 
 \subsection{Mahout}
 
@@ -110,8 +118,6 @@ for a lot of machine learning problems such as:
 we are only using Mahout for indexing Wikipedia and creating the corresponding
 tf-idf vectors.
 
-\missingfigure{Architecture from http://www.slideshare.net/VaradMeru/introduction-to-mahout-and-machine-learning ?}
-
 \paragraph{Generating tf-idf vectors} To create tf-idf vectors from a set of
 plain-text documents \footnote{Stored in a \ac{HDFS}-specific format called
 Sequence Files.} is being done using \emph{mahout seq2sparse}. This tool has
@@ -119,14 +125,24 @@ parameters that allow us to filter out rare words, stop-words and even perform
 stemming if needed.
 
 If you are interested in finding out more about Mahout you can read the book
-\emph{Mahout in Action} \todo{Citation needed} or visit their website
-\todo{https://mahout.apache.org/}. For the purposes of this thesis we use
-\emph{Mahout version 0.9}.
+\emph{Mahout in Action} \cite{owen2011mahout} or visit their website
+\footnote{\url{https://mahout.apache.org/} (accessed on 17.04.2014)}. For the
+purposes of this thesis we use \emph{Mahout version 0.9}.
 
 \section{System architecture}
+\label{sec:arch}
 
 In this section, we describe how we designed and implemented the WikiMining
 library for summarising Wikipedia using submodular function maximisation.
+In Figure~\ref{fig:wikimining} we present the general architecture of
+WikiMining.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\textwidth,natwidth=1156,natheight=718]{images/wikimining.png}
+  \caption{WikiMining architecture overview.}
+  \label{fig:wikimining}
+\end{figure}
 
 \subsection{Base data types}
 
@@ -145,7 +161,7 @@ We use the following data type classes, defined in package
   of MapReduces to partition the data as part of:
     \begin{itemize}
       \item the GreeDi protocol (see Section~\vref{sec:submod-max});
-      \item \acl{LSH} (see Section~ \todo{Preliminaries}).
+      \item \acl{LSH} (see Section~\vref{sec:lsh}).
     \end{itemize}
     It also comes in a \emph{Writable} form so that it can be serialisable by
     Hadoop \acl{MR}.
@@ -189,16 +205,17 @@ WikiMining provides the following submodular functions package
   is not used with Wikipedia, but instead we used it to test our implementation
   correctness against the \emph{SFO Matlab toolbox} \cite{krause2010sfo}.
   \item[DocumentInfluence] Computes the \emph{influence of a document} as
-  described in Sections~ \todo{4.d.Doc Infl, 5.e.Scaling doc infl}, given the
-  \emph{document creation dates}, a \emph{document novelty} index and a
-  \emph{yearly word spread} index.
+  described in Section~\vref{sec:doc-influence} and
+  Section~\vref{sec:scale-doc-influence}, given the \emph{document creation
+  dates}, a \emph{document novelty} index and a \emph{yearly word spread}
+  index.
   \item[GraphCoverage] Computes the \emph{graph coverage} described in
   Section~\vref{sec:graph-coverage}, given the graph as an \emph{adjacency
   list}.
   \item[LSHBuckets] Computes the \emph{\ac{LSH}-buckets} function described in
-  Section~ \todo{5.d Lsh buckets}, given the \ac{LSH} buckets.
+  Section~\vref{sec:lsh-buckets}, given the \ac{LSH} buckets.
   \item[ObjectiveCombiner] Linearly combines multiple objective functions as
-  described in Section~ \todo{5.f. Combining multiple subm fn}, given a list of
+  described in Section~\vref{sec:combine}, given a list of
   functions and weights.
   \item[RevisionsSummer] A \emph{modular} function that just sums the number of
   revisions of each selected document.
@@ -229,17 +246,19 @@ WikiMining provides three types of greedy \acf{SFO} algorithms in package
 \begin{description}
   \item[SfoGreedyLazy] Implements a lazy greedy \ac{SFO} algorithm that uses a
   non-stable sorting mechanism, that is a heap, to speed-up the computations as
-  described in section/paper \todo{4.b.sf max}. This is the only maximisation
-  algorithm that we use in all our non-testing code. It has a complexity of
-  \(O(k \cdot N\), where \(k\) is the average number times the current maximum
-  score is not the real maximum score \todo{Check this complexity}.
+  described in Section~\vref{sec:submod-functions}. This is the only
+  maximisation algorithm that we use in all our non-testing code. It has a
+  complexity of \(O(k \cdot avgN\), where \(k\) is the number of selected
+  documents and \(avgN\) is the average number times the current top value of
+  the heap is not the real maximum score.
   \item[SfoGreedyNonLazy] Implements a brute-force (non-lazy) - it tries all
   possible documents at each iteration - greedy \ac{SFO} algorithm as described
-  in section/paper \todo{4.b.sf max}.
+  in Section~\vref{sec:submod-functions}.
   \item[SfoGreedyStableLazy] Implements a stable-sort lazy greedy \ac{SFO}
   algorithm. The complexity of this algorithm is the same as of the non-lazy
-  version: \(O(N)\), so it isn't really useful, but we used it for testing and
-  debugging.
+  version: \(O(k \cdot N)\), where \(k\) is the desired number of selected
+  documents and \(N\) is the total number of documents; as a results, it isn't
+  really useful, but we used it for testing and debugging.
 \end{description}
 
 If you need to implement your own \acl{SFO} algorithm you would need to
@@ -253,7 +272,7 @@ abstract class that provides you with \emph{score, document id} pair.
 \subsection{Coverage \aclp{MR}}
 
 This part refers to the three categories of classes that deal with coverage,
-found in package \emph{ch.ethz.las.wikimining.mr.coverage.h104}:
+found in package \emph{ch.ethz.las.wikimining.mr.coverage[.h104]}:
 \begin{enumerate}
   \item preprocessing classes;
   \item GreeDi protocol classes;
@@ -267,7 +286,9 @@ The preprocessing classes are as follows:
   \item[GraphInlinksCounter] Given the inverted adjacency lists it computes the
   number of inlinks of each node.
   \item[RevisionsConvertor] Converts a list of \emph{revision statistics}
-  (number of revisions, revision volume from plain-text to sequence files.
+  (number of revisions, revision volume from plain-text to sequence files;
+  \item[WikiToPlainText] Converts an \ac{XML} Wikipedia dump to plain-text
+  sequence files, using \cloud.
 \end{description}
 
 The two stages of the \emph{GreeDi} protocol are implemented as classes
@@ -297,7 +318,8 @@ We implement the following reducers:
   \item[GraphGreeDiReducer] Reads the graph and applies \emph{graph coverage}
   by itself \footnote{See Section~\vref{sec:graph-coverage}};
   \item[LshBucketsGreeDiReducer] Reads the \ac{LSH} buckets and applies the
-  \emph{\ac{LSH} buckets function}. \footnote{See Section~ } \todo{Add to footnote 5.d. LSH buckets}.
+  \emph{\ac{LSH} buckets function}. \footnote{See
+  Section~\vref{sec:lsh-buckets}}.
 \end{description}
 
 \subsection{Influence \aclp{MR}}
