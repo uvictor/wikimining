@@ -135,7 +135,7 @@ standard-deviation bars.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rand-mean.png}
   \caption{The score of the \emph{random selected} sets as given by the other
-  submodular functions}
+  submodular functions.}
   \label{img:rand-mean}
 \end{figure}
 
@@ -165,7 +165,7 @@ We present the \emph{functions scores} in Figure~\ref{img:wc} and the \emph{top
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/wc.png}
   \caption{The score of the \emph{word coverage} set as given by the other
-  submodular functions}
+  submodular functions.}
   \label{img:wc}
 \end{figure}
 
@@ -206,7 +206,7 @@ We present the \emph{functions scores} in Figure~\ref{img:infl} and the
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/infl.png}
   \caption{The scores of the \emph{document influence} set as given by the
-  other submodular functions}
+  other submodular functions.}
   \label{img:infl}
 \end{figure}
 
@@ -260,7 +260,7 @@ linked-to a lot.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/graph.png}
   \caption{The scores of the \emph{graph coverage} set as given by the other
-  submodular functions}
+  submodular functions.}
   \label{img:graph}
 \end{figure}
 
@@ -305,7 +305,7 @@ coverage + LSH buckets} performs similarly to using just \emph{word coverage}.
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/wc+lsh.png}
   \caption{The scores of the set selected by \emph{\ac{LSH} buckets} linearly
   combined with \emph{word coverage} as given by the other submodular
-  functions}
+  functions.}
   \label{img:wc+lsh}
 \end{figure}
 
@@ -339,16 +339,13 @@ coverage + LSH buckets} performs similarly to using just \emph{word coverage}.
 
 \section{Beyond word coverage}
 
-EXPLAIN \todo{Explain all results!}
-CAPTIONS \todo{Change figure captions to meet the names of the functions}
-
 We present the \emph{tf-idf \(\cdot\) number-of-revisions} in
 Figure~\ref{img:rc} and the \emph{top 20} articles in Table~\ref{tab:rc}.
 \begin{figure}
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rc.png}
   \caption{The scores of the \emph{tf-idf -- revisions count} set as given by
-  the other submodular functions}
+  the other submodular functions.}
   \label{img:rc}
 \end{figure}
 \begin{table}
@@ -387,7 +384,7 @@ Table~\ref{tab:rc-rv}.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rc-rv.png}
   \caption{The scores of the \emph{tf-idf -- revisions count -- revisions
-  volume} set as given by the other submodular functions}
+  volume} set as given by the other submodular functions.}
   \label{img:rc-rv}
 \end{figure}
 \begin{table}
@@ -426,7 +423,7 @@ Table~\ref{tab:inl-rv}.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl-rv.png}
   \caption{The scores of the \emph{tf-idf -- inlinks count -- revisions volume}
-  set as given by the other submodular functions}
+  set as given by the other submodular functions.}
   \label{img:inl-rv}
 \end{figure}
 
@@ -466,7 +463,7 @@ in Table~\ref{tab:inl-rc}.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl-rc.png}
   \caption{The scores of the \emph{tf-idf -- inlinks count -- revisions count}
-  set as given by the other submodular functions}
+  set as given by the other submodular functions.}
   \label{img:inl-rc}
 \end{figure}
 
@@ -505,7 +502,7 @@ Figure~\ref{img:inl} and the \emph{top 20} articles in Table~\ref{tab:inl}.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl.png}
   \caption{The scores of the \emph{tf-idf -- inlinks count} set as given by the
-  other submodular functions}
+  other submodular functions.}
   \label{img:inl}
 \end{figure}
 
@@ -544,7 +541,7 @@ and the \emph{top 20} articles in Table~\ref{tab:rv}.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/rv.png}
   \caption{The scores of the \emph{tf-idf -- revisions volume} set as given by
-  the other submodular functions}
+  the other submodular functions.}
   \label{img:rv}
 \end{figure}
 
@@ -584,7 +581,7 @@ and the \emph{top 20} articles in Table~\ref{tab:inl-rc-rv}.
   \centering
   \includegraphics[width=0.9\textwidth,natwidth=555,natheight=419]{images/inl-rc-rv.png}
   \caption{The scores of the \emph{tf-idf -- inlinks count -- revisions count
-  -- revisions volume} set as given by the other submodular functions}
+  -- revisions volume} set as given by the other submodular functions.}
   \label{img:inl-rc-rv}
 \end{figure}
 
@@ -617,7 +614,46 @@ and the \emph{top 20} articles in Table~\ref{tab:inl-rc-rv}.
     \end{tabular}
 \end{table}
 
+Looking at the graphs we can see that there all functions have advantages and
+disadvantages and there is not a clear winner.
+It is important to note that while \emph{inlinks-based} metrics include most of
+the time significant (highly quoted) articles, the pages selected by the
+\emph{revision-based} functions concern very debatable topics.
+
+We observe that functions that use \emph{number of inlinks} as part of their
+metric perform similarly to one another and similarly to \emph{graph coverage}.
+Also, we can confirm that using \emph{revisions volume} is not too informative
+as the scores are similar to the equivalent functions that do not use the
+\emph{revisions volume} value at all.
+More importantly, by looking at the bar graphs and at the \emph{top 20}
+selected documents we conclude that the other functions outperform the existing
+\emph{word coverage} and \emph{document influence} functions.
+
+We argued before that the importance of an article is a subjective by its very
+nature.
+However, in our opinion, some of the best set of articles is the one in
+Table~\ref{tab:inl}, selected by the \emph{tf-idf -- inlinks count} function.
+
 \section{Running time}
 
-Dummy text. \todo{Add running times}
+In this section, we report the running times for selecting \(40\) documents
+using Hadoop using 50 machine cores. We exclude \emph{extraction of plain-text}
+and \emph{creation of tf-idf} from the reported times.
+\begin{itemize}
+  \item \emph{Word-coverage based methods} \(\approx 20m\);
+  \item \emph{Graph coverage} \(\approx 19m\);
+  \item \emph{Word coverage} linearly combined with \emph{\ac{LSH} buckets}
+  \(\approx 22m\):
+  \begin{itemize}
+    \item Preprocess \(\approx 5m\);
+    \item GreeDi \(\approx 17m\);
+  \end{itemize}
+  \item \emph{Document influence}
+  \(\approx 60m\):
+  \begin{itemize}
+    \item (Novelty tf-idf preprocessing \(\approx 1h 30m\))
+    \item Other preprocessing \(\approx 7m\);
+    \item GreeDi \(\approx 53m\);
+  \end{itemize}
+\end{itemize}
 
